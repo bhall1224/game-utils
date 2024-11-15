@@ -7,8 +7,8 @@ from pygame.display import set_mode as create_screen
 from pygame.event import get as get_game_events
 from pygame.time import Clock
 
-from controller import Controller
-from sprites import GameSprite
+from .controller import Controller
+from .sprites import GameSprite
 
 
 class Game(ABC):
