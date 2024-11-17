@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Union
 
-from pygame import QUIT, Surface
+from pygame import QUIT, Surface, quit
 from pygame.display import flip as flip_display
 from pygame.display import set_mode as create_screen
 from pygame.event import get as get_game_events
+from pygame.sprite import Group
 from pygame.time import Clock
 
 from .controller import Controller
@@ -39,6 +40,9 @@ class Game(ABC):
         self.player_sprite = player_sprite
         self.screen = create_screen((self.settings.width, self.settings.height))
         self.other_sprites = other_sprites
+        self.other_sprites_group: Group = Group()
+        for sprite in other_sprites:
+            self.other_sprites_group.add(sprite)
 
     def run(self):
         clock = Clock()
@@ -46,11 +50,27 @@ class Game(ABC):
         while not self._is_quit():
             self._update_screen()
             self._update_sprites(dt)
+            self._update_collisions(dt)
             flip_display()
             dt = self._get_delta_time(clock)
+        quit()
 
     @abstractmethod
     def _update_sprites(self, dt: float):
+        """how do you want to update the sprites at each turn
+
+        Args:
+            dt (float): change in time
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def _update_collisions(self, dt: float):
+        """how do you want to update sprites upon collision
+
+        Args:
+            dt (float): change in time
+        """
         raise NotImplementedError
 
     def _get_delta_time(self, clock: Clock) -> float:

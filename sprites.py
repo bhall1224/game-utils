@@ -1,16 +1,16 @@
-from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Callable, Optional
 
 from pygame import Rect, Surface, Vector2
 from pygame.sprite import Sprite
 
 
-class GameSprite(Sprite, ABC):
+class GameSprite(Sprite):
     def __init__(
         self,
         image: Surface,
         position: Vector2,
         boundaries: Optional[Rect] = None,
+        id: int = 0,
     ):
         """Implement a Game Sprite object. Subclass must GameSprite.update
 
@@ -25,10 +25,57 @@ class GameSprite(Sprite, ABC):
         self.rect = Rect(position.x, position.y, *dimensions)
         self.position = position
         self.boundaries = boundaries
+        self.id = id
 
-    @abstractmethod
-    def update(self, *args: Vector2, **kwargs: Any):
-        pass
+    def update(self, *args: Vector2, **kwargs: Callable[[], None]):
+        """Updates position of this sprite.  If I have boundaries,
+        I will bind this sprite's position and any others you pass in *args.
+        Pass callables in **kwargs.
+
+        Args:
+            xbounds (Callable[[], None]): a function to call when X bounds is met
+            ybounds (Callable[[], None]): a function to call when Y bounds is met
+        """
+        xbounds = kwargs.get("xbounds")
+        ybounds = kwargs.get("ybounds")
+        positions = [self.position] + list(args)
+        x, y, w, h = self.rect
+
+        if self.boundaries is not None:
+            bx_max, bx_min, by_max, by_min = self.boundaries
+
+            if self.position.y > by_max - h / 2:
+                if ybounds is not None:
+                    ybounds()
+
+                for position in positions:
+                    position.y = by_max - h / 2
+
+            elif self.position.y < by_min + h / 2:
+                if ybounds is not None:
+                    ybounds()
+
+                for position in positions:
+                    position.y = by_min + h / 2
+
+            if self.position.x > bx_max - w / 2:
+                if xbounds is not None:
+                    xbounds()
+
+                for position in positions:
+                    position.x = bx_max - w / 2
+
+            elif self.position.x < bx_min + w / 2:
+                if xbounds is not None:
+                    xbounds()
+
+                for position in positions:
+                    position.x = bx_min + w / 2
+
+        x = self.position.x - w / 2
+        y = self.position.y - h / 2
+
+        self.rect = Rect(x, y, w, h)
 
     def __str__(self) -> str:
         return str(tuple(self.rect))
