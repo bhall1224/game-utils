@@ -8,7 +8,6 @@ from pygame.event import get as get_game_events
 from pygame.sprite import Group
 from pygame.time import Clock
 
-from .controller import Controller
 from .sprites import GameSprite
 
 
@@ -29,14 +28,9 @@ class Game(ABC):
             self.frames_per_second = frames_per_second
 
     def __init__(
-        self,
-        settings: Settings,
-        controllers: list[Controller],
-        player_sprite: GameSprite,
-        *other_sprites: GameSprite
+        self, settings: Settings, player_sprite: GameSprite, *other_sprites: GameSprite
     ):
         self.settings = settings
-        self.controllers = controllers
         self.player_sprite = player_sprite
         self.screen = create_screen((self.settings.width, self.settings.height))
         self.other_sprites = other_sprites
@@ -62,16 +56,15 @@ class Game(ABC):
         Args:
             dt (float): change in time
         """
-        raise NotImplementedError
+        pass
 
-    @abstractmethod
     def _update_collisions(self, dt: float):
         """how do you want to update sprites upon collision
 
         Args:
             dt (float): change in time
         """
-        raise NotImplementedError
+        pass
 
     def _get_delta_time(self, clock: Clock) -> float:
         return clock.tick(self.settings.frames_per_second) / 1000

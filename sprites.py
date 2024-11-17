@@ -1,7 +1,10 @@
-from typing import Callable, Optional
+from typing import Any, Optional
 
 from pygame import Rect, Surface, Vector2
 from pygame.sprite import Sprite
+
+from .controller import Controller
+from .physics import PhysicsBody
 
 
 class GameSprite(Sprite):
@@ -27,14 +30,14 @@ class GameSprite(Sprite):
         self.boundaries = boundaries
         self.id = id
 
-    def update(self, *args: Vector2, **kwargs: Callable[[], None]):
+    def update(self, *args: Any, **kwargs: Any):
         """Updates position of this sprite.  If I have boundaries,
-        I will bind this sprite's position and any others you pass in *args.
+        I will bind this sprite's position and any others (Vector2) you pass in *args.
         Pass callables in **kwargs.
 
         Args:
-            xbounds (Callable[[], None]): a function to call when X bounds is met
-            ybounds (Callable[[], None]): a function to call when Y bounds is met
+            xbounds (() -> None): a function to call when X bounds is met
+            ybounds (() -> None): a function to call when Y bounds is met
         """
         xbounds = kwargs.get("xbounds")
         ybounds = kwargs.get("ybounds")
@@ -79,3 +82,31 @@ class GameSprite(Sprite):
 
     def __str__(self) -> str:
         return str(tuple(self.rect))
+
+
+class PhysicsSprite(GameSprite):
+    def __init__(
+        self,
+        image: Surface,
+        position: Vector2,
+        physics_body: PhysicsBody = PhysicsBody(),
+        boundaries: Optional[Rect] = None,
+        id: int = 0,
+    ):
+        super().__init__(image, position, boundaries, id)
+        self.physics_body = physics_body
+        self.physics_body.position = self.position
+
+
+class PlayerSprite(PhysicsSprite):
+    def __init__(
+        self,
+        image: Surface,
+        position: Vector2,
+        controller: Controller,
+        physics_body: PhysicsBody = PhysicsBody(),
+        boundaries: Optional[Rect] = None,
+        id: int = 0,
+    ):
+        super().__init__(image, position, physics_body, boundaries, id)
+        self.controller = controller

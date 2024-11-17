@@ -28,10 +28,13 @@ class PhysicsBody:
 
         return self.position
 
+    def on_collide(self, other):
+        assert isinstance(other, PhysicsBody)
+        logger.debug(f"received physics body {other}")
+
+    def __str__(self) -> str:
+        return str(self.position)
+
 
 def move(position: Vector2, velocity: Vector2, dt: float) -> Vector2:
     return position + velocity * dt
-
-
-def collision(body1: PhysicsBody, body2: PhysicsBody):
-    pass
