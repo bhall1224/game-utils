@@ -1,11 +1,10 @@
 from loguru import logger
 from numpy.random import normal
-from pygame import Vector2
-
-ZERO_VECTOR = Vector2(0, 0)
+from pygame import Vector2, Vector3
 
 
 class PhysicsBody:
+    ZERO_VECTOR = Vector2(0, 0)
     GRAVITY = 9.8
 
     def __init__(
@@ -17,24 +16,23 @@ class PhysicsBody:
         slip: float = 1.0,
     ) -> None:
         self.mass = mass
-        self.velociy = ZERO_VECTOR
+        self.velociy = self.ZERO_VECTOR
         self.position = position
-        self.friction = friction
-        self.k_friction = 0
+        self.static_friction = friction
+        self.kinetic_friction = 0
         self.elasticity = elasticity
-        self.slip = slip
+        if self.static_friction > 0:
+            self.kinetic_friction = self.static_friction * normal(loc=slip)
 
     def force(self, acceleration: Vector2, dtime: float) -> Vector2:
-        force = acceleration * dtime
+        new_velocity = acceleration * dtime
+        force = acceleration * self.mass
 
-        if (
-            self.k_friction == 0
-            and abs(force.magnitude()) > self.normal_force() * self.friction
-        ) or (abs(force.magnitude()) > self.normal_force() * self.k_friction):
-            if self.friction > 0 and self.k_friction == 0:
-                self.k_friction = self.friction * normal(loc=self.slip)
-            self.velociy += force
-            self.move(dtime)
+        if force.magnitude() > self.friction_force().magnitude():
+            self.velociy += new_velocity
+        else:
+            self.velociy -= self.velociy * self.friction_force().magnitude() * dtime
+        self.move(dtime)
 
         return self.velociy
 
@@ -64,8 +62,15 @@ class PhysicsBody:
     def momentum(self) -> Vector2:
         return self.velociy * self.mass
 
-    def normal_force(self) -> float:
-        return self.mass * self.GRAVITY
+    def normal_force(self) -> Vector3:
+        return Vector3(0, 0, self.mass * self.GRAVITY)
+
+    def friction_force(self) -> Vector3:
+        return (
+            self.static_friction * self.normal_force()
+            if self.velociy == self.ZERO_VECTOR
+            else self.kinetic_friction * self.normal_force()
+        )
 
     def __str__(self) -> str:
         return str(self.position)
