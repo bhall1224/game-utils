@@ -10,13 +10,13 @@ class PhysicsBody:
     def __init__(
         self,
         mass: float = 1.0,
-        position: Vector2 = ZERO_VECTOR,
+        position: Vector2 = ZERO_VECTOR.copy(),
         friction: float = 0.0,
         elasticity: float = 1.0,
         slip: float = 1.0,
     ) -> None:
         self.mass = mass
-        self.velociy = self.ZERO_VECTOR
+        self.velociy = self.ZERO_VECTOR.copy()
         self.position = position
         self.static_friction = friction
         self.kinetic_friction = 0
@@ -37,11 +37,7 @@ class PhysicsBody:
         return self.velociy
 
     def move(self, dtime: float) -> Vector2:
-        self.position = move(
-            position=self.position,
-            velocity=self.velociy,
-            dt=dtime,
-        )
+        self.position += self.velociy * dtime
 
         return self.position
 
@@ -50,8 +46,6 @@ class PhysicsBody:
         # for initial magnitudes Vm(self) and Us(other)
         assert isinstance(other, PhysicsBody)
 
-        logger.trace(f"received physics body {other}")
-        logger.trace(f"my velocity: {self.velociy}")
         self.velociy *= self.mass - other.mass
         self.velociy += other.velociy * 2 * other.mass
         self.velociy /= self.mass + other.mass
@@ -74,7 +68,3 @@ class PhysicsBody:
 
     def __str__(self) -> str:
         return str(self.position)
-
-
-def move(position: Vector2, velocity: Vector2, dt: float) -> Vector2:
-    return position + velocity * dt

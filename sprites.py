@@ -1,5 +1,6 @@
+from abc import abstractmethod
 from typing import Any, Optional
-
+from loguru import logger
 from pygame import Rect, Surface, Vector2
 from pygame.sprite import Sprite
 
@@ -30,9 +31,13 @@ class GameSprite(Sprite):
         self.boundaries = boundaries
         self.id = id
 
+    @abstractmethod
     def update(self, *args: Any, **kwargs: Any):
+        pass
+
+    def _update_pos(self, *args: Any, **kwargs: Any):
         """Updates position of this sprite.  If I have boundaries,
-        I will bind this sprite's position and any others (Vector2) you pass in *args.
+        I will bind this sprite's position.
         Pass callables in **kwargs.
 
         Args:
@@ -41,7 +46,6 @@ class GameSprite(Sprite):
         """
         xbounds = kwargs.get("xbounds")
         ybounds = kwargs.get("ybounds")
-        positions = [self.position] + list(args)
         x, y, w, h = self.rect
 
         if self.boundaries is not None:
@@ -51,29 +55,25 @@ class GameSprite(Sprite):
                 if ybounds is not None:
                     ybounds()
 
-                for position in positions:
-                    position.y = by_max - h / 2
+                self.position.y = by_max - h / 2
 
             elif self.position.y < by_min + h / 2:
                 if ybounds is not None:
                     ybounds()
 
-                for position in positions:
-                    position.y = by_min + h / 2
+                self.position.y = by_min + h / 2
 
             if self.position.x > bx_max - w / 2:
                 if xbounds is not None:
                     xbounds()
 
-                for position in positions:
-                    position.x = bx_max - w / 2
+                self.position.x = bx_max - w / 2
 
             elif self.position.x < bx_min + w / 2:
                 if xbounds is not None:
                     xbounds()
 
-                for position in positions:
-                    position.x = bx_min + w / 2
+                self.position.x = bx_min + w / 2
 
         x = self.position.x - w / 2
         y = self.position.y - h / 2
@@ -89,7 +89,7 @@ class PhysicsSprite(GameSprite):
         self,
         image: Surface,
         position: Vector2,
-        physics_body: PhysicsBody = PhysicsBody(),
+        physics_body: PhysicsBody,
         boundaries: Optional[Rect] = None,
         id: int = 0,
     ):
@@ -104,7 +104,7 @@ class PlayerSprite(PhysicsSprite):
         image: Surface,
         position: Vector2,
         controller: Controller,
-        physics_body: PhysicsBody = PhysicsBody(),
+        physics_body: PhysicsBody,
         boundaries: Optional[Rect] = None,
         id: int = 0,
     ):
