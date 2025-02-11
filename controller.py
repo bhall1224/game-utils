@@ -50,11 +50,14 @@ class JoystickController(Controller):
             action_type = vector_action["action_type"]
             if action_type == "axis":
                 axis = self.input.get_axis(id)
+                print(f"Action {action_type} ID {id} value {axis}")
                 vector_callback = vector_action["data_callback"]
                 if vector_callback is not None:
                     axis = vector_callback(axis)
+                    print(f"controller output {axis}")
                 return axis
             else:
+                print(f"Button {id}")
                 return 1.0 if self.input.get_button(id) else 0.0
 
         else:
