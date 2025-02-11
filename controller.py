@@ -1,8 +1,7 @@
+import pygame
+
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Literal, Optional, TypedDict
-from pygame import Vector2
-from pygame.joystick import JoystickType
-from pygame.key import get_pressed
 
 DataCallback = Optional[Callable[[float], float]]
 
@@ -16,10 +15,10 @@ class VectorAction(TypedDict):
 
 class Controller(ABC):
     @abstractmethod
-    def direction(self) -> Vector2:
+    def direction(self) -> pygame.Vector2:
         raise NotImplementedError()
 
-    def rotation(self, axis: Literal["x", "y", "z"]) -> Vector2:
+    def rotation(self, axis: Literal["x", "y", "z"]) -> pygame.Vector2:
         raise NotImplementedError()
 
     def action(self, key: str) -> float:
@@ -29,7 +28,7 @@ class Controller(ABC):
 class JoystickController(Controller):
     def __init__(
         self,
-        input: JoystickType,
+        input: pygame.joystick.JoystickType,
         speed: int = 1,
         *args: VectorAction,
         **kwargs: VectorAction,
@@ -77,7 +76,7 @@ class KeyboardController(Controller):
         self._actions.update(kwargs)
 
     def get_keys(self) -> Any:
-        return get_pressed()
+        return pygame.key.get_pressed()
 
     def action(self, key: str) -> float:
         vector_action = self._actions.get(key)
@@ -91,3 +90,14 @@ class KeyboardController(Controller):
                     return data_callback(1)
 
         return 0.0
+
+
+def get_controllers() -> list[pygame.joystick.JoystickType]:
+    joysticks = []
+
+    if pygame.joystick.get_count() > 0:
+        for j in range(pygame.joystick.get_count()):
+            new_joystick = pygame.joystick.Joystick(j)
+            joysticks.append(new_joystick)
+
+    return joysticks

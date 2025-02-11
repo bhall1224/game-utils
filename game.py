@@ -1,11 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Union
-
-from pygame import QUIT, Surface, quit
-from pygame.display import flip, set_mode
-from pygame.event import get as get_game_events
-from pygame.sprite import Group
-from pygame.time import Clock
+import pygame
 
 from .sprites import GameSprite
 
@@ -18,7 +13,7 @@ class Game(ABC):
             height: float,
             frames_per_second: int = 60,
             bg_color: Optional[Union[str, tuple[int, int, int]]] = None,
-            bg_image: Optional[Surface] = None,
+            bg_image: Optional[pygame.Surface] = None,
         ):
             self.height = height
             self.width = width
@@ -31,20 +26,22 @@ class Game(ABC):
     ):
         self.settings = settings
         self.player_sprite = player_sprite
-        self.screen = set_mode((self.settings.width, self.settings.height))
+        self.screen = pygame.display.set_mode(
+            (self.settings.width, self.settings.height)
+        )
         self.other_sprites = other_sprites
-        self.other_sprites_group: Group = Group()
+        self.other_sprites_group: pygame.sprite.Group = pygame.sprite.Group()
         for sprite in other_sprites:
             self.other_sprites_group.add(sprite)
 
     def run(self):
-        clock = Clock()
+        clock = pygame.time.Clock()
         dt = 0
         while not self._is_quit():
             self._update_screen()
             self._update_sprites(dt)
             self._update_collisions(dt)
-            flip()
+            pygame.display.flip()
             dt = self._get_delta_time(clock)
         quit()
 
@@ -65,7 +62,7 @@ class Game(ABC):
         """
         pass
 
-    def _get_delta_time(self, clock: Clock) -> float:
+    def _get_delta_time(self, clock: pygame.time.Clock) -> float:
         return clock.tick(self.settings.frames_per_second) / 1000
 
     def _update_screen(self):
@@ -75,8 +72,8 @@ class Game(ABC):
             self.screen.fill(self.settings.bg_color)
 
     def _is_quit(self) -> bool:
-        for event in get_game_events():
-            if event.type == QUIT:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
                 return True
 
         return False
