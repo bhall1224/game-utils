@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Literal, Optional, TypedDict, Union
-from loguru import logger
+from typing import Any, Callable, Literal, Optional, TypedDict
 from pygame import Vector2
 from pygame.joystick import JoystickType
 from pygame.key import get_pressed
@@ -43,7 +42,6 @@ class JoystickController(Controller):
             id = action["action_name"]
             self._actions[id] = action
         self._actions.update(kwargs)
-        logger.trace(f"joystick actions: {self._actions}")
 
     def action(self, key: str) -> float:
         vector_action = self._actions.get(key)
@@ -77,7 +75,6 @@ class KeyboardController(Controller):
             id = action["action_name"]
             self._actions[id] = action
         self._actions.update(kwargs)
-        logger.trace(f"keyboard actions: {self._actions}")
 
     def get_keys(self) -> Any:
         return get_pressed()

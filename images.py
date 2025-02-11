@@ -1,6 +1,5 @@
 from typing import Optional
 
-from loguru import logger
 from pygame import Rect, Surface
 
 
@@ -19,10 +18,8 @@ class SpriteSheet:
         Returns:
             Surface: The sprite from the spritesheet using the given coordinates
         """
-        logger.trace(f"drawing image at position: {rect}")
         image = Surface(rect.size)
         if self.bg_color is not None:
-            logger.trace("setting sprite bg color")
             image.fill(self.bg_color)
         image.blit(self.spritesheet, (0, 0), rect)
         return image
@@ -52,7 +49,6 @@ class SpriteSheetList(SpriteSheet):
     def __getitem__(self, index: int) -> Surface:
         if index >= len(self.sprite_rects):
             msg = f"index {index} out of bounds"
-            logger.error(msg)
             raise IndexError(msg)
 
         return self.get_spritesheet_segment(self.sprite_rects[index])
@@ -87,7 +83,6 @@ class SpriteSheetMap(SpriteSheetList):
 
         if s is None:
             msg = f"No key {name}"
-            logger.error(msg)
             raise KeyError(msg)
 
         return self.get_spritesheet_segment(s)

@@ -1,6 +1,5 @@
 from abc import abstractmethod
 from typing import Any, Optional
-from loguru import logger
 from pygame import Rect, Surface, Vector2
 from pygame.sprite import Sprite
 

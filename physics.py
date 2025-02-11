@@ -1,4 +1,3 @@
-from loguru import logger
 from numpy.random import normal
 from pygame import Vector2, Vector3
 
