@@ -90,8 +90,12 @@ class KeyboardController(Controller):
 
 
 class ControllerHandler:
+    ControllerType = Controller
+
     @classmethod
-    def get_joystick_controller(cls, joystick: JoystickType, speed: int) -> Controller:
+    def get_joystick_controller(
+        cls, joystick: JoystickType, speed: int
+    ) -> ControllerType:
         raise NotImplementedError
 
     @classmethod
@@ -99,7 +103,7 @@ class ControllerHandler:
         cls,
         players: int = 1,
         speed: int = 1,
-    ) -> list[Controller]:
+    ) -> list[ControllerType]:
         joysticks = []
 
         if get_joystick_count() >= players:
