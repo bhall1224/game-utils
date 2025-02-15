@@ -1,24 +1,24 @@
-import pygame
-
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Literal, Optional, TypedDict
+from typing import Any, Literal, TypedDict
 
-DataCallback = Optional[Callable[[float], float]]
+from pygame import Vector2
+from pygame.key import get_pressed as get_pressed_keys
+from pygame.joystick import Joystick, JoystickType
+from pygame.joystick import get_count as get_joystick_count
 
 
 class VectorAction(TypedDict):
     input_id: int
     action_type: Literal["axis", "button"]
     action_name: str
-    data_callback: DataCallback
 
 
 class Controller(ABC):
     @abstractmethod
-    def direction(self) -> pygame.Vector2:
+    def direction(self) -> Vector2:
         raise NotImplementedError()
 
-    def rotation(self, axis: Literal["x", "y", "z"]) -> pygame.Vector2:
+    def rotation(self, axis: Literal["x", "y", "z"]) -> Vector2:
         raise NotImplementedError()
 
     def action(self, key: str) -> float:
@@ -28,7 +28,7 @@ class Controller(ABC):
 class JoystickController(Controller):
     def __init__(
         self,
-        input: pygame.joystick.JoystickType,
+        input: JoystickType,
         speed: int = 1,
         *args: VectorAction,
         **kwargs: VectorAction,
@@ -51,10 +51,6 @@ class JoystickController(Controller):
             if action_type == "axis":
                 axis = self.input.get_axis(id)
                 print(f"Action {action_type} ID {id} value {axis}")
-                vector_callback = vector_action["data_callback"]
-                if vector_callback is not None:
-                    axis = vector_callback(axis)
-                    print(f"controller output {axis}")
                 return axis
             else:
                 print(f"Button {id}")
@@ -79,28 +75,39 @@ class KeyboardController(Controller):
         self._actions.update(kwargs)
 
     def get_keys(self) -> Any:
-        return pygame.key.get_pressed()
+        return get_pressed_keys()
 
     def action(self, key: str) -> float:
         vector_action = self._actions.get(key)
 
         if vector_action is not None:
             id = vector_action["input_id"]
-            data_callback = vector_action["data_callback"]
             all_keys = self.get_keys()
             if len(all_keys) > 0 and all_keys[id] is True:
-                if data_callback is not None:
-                    return data_callback(1)
+                return 1.0
 
         return 0.0
 
 
-def get_controllers() -> list[pygame.joystick.JoystickType]:
-    joysticks = []
+class ControllerHandler:
+    @classmethod
+    def get_joystick_controller(cls, joystick: JoystickType, speed: int) -> Controller:
+        raise NotImplementedError
 
-    if pygame.joystick.get_count() > 0:
-        for j in range(pygame.joystick.get_count()):
-            new_joystick = pygame.joystick.Joystick(j)
-            joysticks.append(new_joystick)
+    @classmethod
+    def get_controllers(
+        cls,
+        players: int = 1,
+        speed: int = 1,
+    ) -> list[Controller]:
+        joysticks = []
 
-    return joysticks
+        if get_joystick_count() >= players:
+            for j in range(players):
+                new_joystick = cls.get_joystick_controller(
+                    joystick=Joystick(j),
+                    speed=speed,
+                )
+                joysticks.append(new_joystick)
+
+        return joysticks

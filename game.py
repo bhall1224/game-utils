@@ -1,11 +1,11 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import Optional, Union
 import pygame
 
 from .sprites import GameSprite
 
 
-class Game(ABC):
+class Game:
     class Settings:
         def __init__(
             self,
@@ -43,7 +43,7 @@ class Game(ABC):
             self._update_collisions(dt)
             pygame.display.flip()
             dt = self._get_delta_time(clock)
-        quit()
+        pygame.quit()
 
     @abstractmethod
     def _update_sprites(self, dt: float):
