@@ -3,6 +3,8 @@ from pygame import Vector2, Vector3
 
 
 class PhysicsBody:
+    """Applies physics to a GameSprite"""
+
     ZERO_VECTOR = Vector2(0, 0)
     GRAVITY = 9.8
 

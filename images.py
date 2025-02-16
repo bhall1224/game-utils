@@ -4,6 +4,8 @@ from pygame import Rect, Surface
 
 
 class SpriteSheet:
+    """Allows user to access segements of a sprite sheet"""
+
     def __init__(self, spritesheet: Surface, bg_color: Optional[str] = None) -> None:
         self.spritesheet = spritesheet
         self.rect = self.spritesheet.get_rect()
@@ -26,6 +28,8 @@ class SpriteSheet:
 
 
 class SpriteSheetList(SpriteSheet):
+    """implements sprite sheet as a list of sprites.  sprites are indexed"""
+
     def __init__(
         self,
         spritesheet: Surface,
@@ -55,6 +59,12 @@ class SpriteSheetList(SpriteSheet):
 
 
 class SpriteSheetMap(SpriteSheetList):
+    """Implements a sprite sheet as a dictionary of sprites
+
+    Args:
+        SpriteSheetList (_type_): _description_
+    """
+
     def __init__(
         self,
         spritesheet: Surface,

@@ -10,18 +10,39 @@ from pygame.locals import *
 
 
 class VectorAction(TypedDict):
+    """Metadata for controller actions. Joystick axis/hat/button id's are mapped to
+    unique keys that correspond to controller behaviors
+
+    Args:
+        input_id (int): The unique id of the button or axis
+        action_type (str): Axis or button type. Only [axis, button] allowed
+        action_name (str): The name of the action. Used as unique key in controller action
+    """
+
     input_id: int
     action_type: Literal["axis", "button"]
     action_name: str
 
 
-class Controller(ABC):
+class Controller:
+    """Abstract base class for controller behavior. Implementation for direction() method is required.
+    Optionally there are definitions for rotations and actions.  VectorActions are metadata that describe
+    what the controller should do (see also VectorAction)
+    """
+
     def __init__(
         self,
         speed: int = 1,
         *args: VectorAction,
         **kwargs: VectorAction,
     ):
+        """Creates new instance of Controller object.
+
+        Args:
+            speed (int, optional): Scalar multiple applied to controller output. Defaults to 1.
+            *args (VectorAction): A list of action metadata for the controller
+            **kwargs (VectorAction): A mapping of metadata for the controller
+        """
         self.speed = speed
 
         self._actions: dict[str, VectorAction] = {}
@@ -32,16 +53,50 @@ class Controller(ABC):
 
     @abstractmethod
     def direction(self) -> Vector2:
+        """Applies direction from controller input
+
+        Raises:
+            NotImplementedError: Abstract method
+
+        Returns:
+            Vector2: The new direction vector
+        """
         raise NotImplementedError()
 
     def rotation(self, axis: Literal["x", "y", "z"]) -> Vector2:
+        """Applies rotation from controller input
+
+        Args:
+            axis (Literal[&quot;x&quot;, &quot;y&quot;, &quot;z&quot;]): The axis of rotation
+
+        Raises:
+            NotImplementedError: Abstract method
+
+        Returns:
+            Vector2: the new rotation vector
+        """
         raise NotImplementedError()
 
     def action(self, key: str) -> float:
+        """_summary_
+
+        Args:
+            key (str): The unique key(name) of the action
+
+        Raises:
+            NotImplementedError: Abstract method
+
+        Returns:
+            float: The value from the controller output for this action
+        """
         raise NotImplementedError()
 
 
 class JoystickController(Controller):
+    """Joystick base class.  Implements Controller class action(key) method.
+    Abstract class that requires implementation for direction() method.
+    """
+
     def __init__(
         self,
         input: JoystickType,
@@ -49,6 +104,14 @@ class JoystickController(Controller):
         *args: VectorAction,
         **kwargs: VectorAction,
     ):
+        """_summary_
+
+        Args:
+            input (pygame.JoystickType): The pygame Joystick reference
+            speed (int, optional): Scalar multiple applied to controller output. Defaults to 1.
+            *args (VectorAction): A list of action metadata for the controller
+            **kwargs (VectorAction): A mapping of metadata for the controller
+        """
         super().__init__(speed, *args, **kwargs)
         self.input = input
 
@@ -71,7 +134,14 @@ class JoystickController(Controller):
 
 
 class KeyboardController(Controller):
+    """Keyboard base class.  Implements Controller class action(key) method.
+    Abstract class that requires implementation for direction() method.
+    Adds get_keys() method that gets all keyboard keys pressed
+    """
+
     class Commands(Enum):
+        """Constant keyboard commands"""
+
         X_AXIS_POS = "x_axis_pos"
         X_AXIS_NEG = "x_axis_neg"
         Y_AXIS_POS = "y_axis_pos"
@@ -93,7 +163,14 @@ class KeyboardController(Controller):
 
 
 class DefaultKeyboardController(KeyboardController):
+    """A simple Keyboard Controller implementation"""
+
     def direction(self) -> Vector2:
+        """Applies direction from keyboard input
+
+        Returns:
+            Vector2: The new directional vector
+        """
         vx = (
             self.action(self.Commands.X_AXIS_POS.value)
             - self.action(self.Commands.X_AXIS_NEG.value)
@@ -133,6 +210,11 @@ DEFAULT_KEYBOARD_CONTROLLER = DefaultKeyboardController(
 
 
 class ControllerHandler:
+    """Helper class for getting controllers
+    Override ControllerHandler.ControllerType type alias, and implement
+    new_controller_instance(joy, speed, *args, **kwargs) method
+    """
+
     ControllerType = Controller
 
     @classmethod
@@ -143,6 +225,20 @@ class ControllerHandler:
         *args: VectorAction,
         **kwargs: VectorAction,
     ) -> ControllerType:
+        """Creates a new instance of ControllerType with given args
+
+        Args:
+            input (pygame.JoystickType): The pygame Joystick reference
+            speed (int): Scalar multiple applied to controller output
+            *args (VectorAction): A list of action metadata for the controller
+            **kwargs (VectorAction): A mapping of metadata for the controller
+
+        Raises:
+            NotImplementedError: Abstract method
+
+        Returns:
+            ControllerType: the new instance of ControllerType
+        """
         raise NotImplementedError
 
     @classmethod
@@ -151,6 +247,15 @@ class ControllerHandler:
         players: int = 1,
         speed: int = 1,
     ) -> list[ControllerType]:
+        """Base implementation for getting all Joystick controllers for each player
+
+        Args:
+            players (int, optional): The number of players. Defaults to 1.
+            speed (int, optional): Scalar multiple applied to controller output. Defaults to 1.
+
+        Returns:
+            list[ControllerType]: A list of controllers for each player
+        """
         joysticks = []
         print(f"controller type: {cls.ControllerType.__name__}")
         if get_joystick_count() >= players:

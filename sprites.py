@@ -15,7 +15,7 @@ class GameSprite(Sprite):
         boundaries: Optional[Rect] = None,
         id: int = 0,
     ):
-        """Implement a Game Sprite object. Subclass must GameSprite.update
+        """Implement a Game Sprite object. Subclass must implement GameSprite.update
 
         Args:
             image (Surface): The image for the sprite
@@ -84,6 +84,8 @@ class GameSprite(Sprite):
 
 
 class PhysicsSprite(GameSprite):
+    """GameSprite that uses a PhysicsBody reference to apply physics"""
+
     def __init__(
         self,
         image: Surface,
@@ -98,6 +100,8 @@ class PhysicsSprite(GameSprite):
 
 
 class PlayerSprite(PhysicsSprite):
+    """GameSprite with PhysicsBody and Controller input"""
+
     def __init__(
         self,
         image: Surface,

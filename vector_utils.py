@@ -13,22 +13,26 @@ def get_random_vector(scalar_mag: int = 1, non_negative: bool = False) -> Vector
 
 
 def bounce_y(v: Vector2) -> Vector2:
+    """Changes direction of a vector with respect to Y axis"""
     v.y *= -1
 
     return v
 
 
 def bounce_x(v: Vector2) -> Vector2:
+    """Changes direction of a vector with respect to X axis"""
     v.x *= -1
     return v
 
 
 def zero_y(v: Vector2) -> Vector2:
+    """Stops movement in the Y direction"""
     v.y = 0
     return v
 
 
 def zero_x(v: Vector2) -> Vector2:
+    """Stops movement in the X direction"""
     v.x = 0
     return v
 
