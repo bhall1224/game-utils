@@ -92,6 +92,67 @@ class Controller:
         raise NotImplementedError()
 
 
+class ControllerHandler:
+    """Helper class for getting controllers
+    Override ControllerHandler.ControllerType type alias, and implement
+    new_controller_instance(joy, speed, *args, **kwargs) method
+    """
+
+    ControllerType = Controller
+
+    @abstractmethod
+    @classmethod
+    def new_controller_instance(
+        cls,
+        joystick: JoystickType,
+        speed: int,
+        *args: VectorAction,
+        **kwargs: VectorAction,
+    ) -> ControllerType:
+        """Creates a new instance of ControllerType with given args
+
+        Args:
+            input (pygame.JoystickType): The pygame Joystick reference
+            speed (int): Scalar multiple applied to controller output
+            *args (VectorAction): A list of action metadata for the controller
+            **kwargs (VectorAction): A mapping of metadata for the controller
+
+        Raises:
+            NotImplementedError: Abstract method
+
+        Returns:
+            ControllerType: the new instance of ControllerType
+        """
+        raise NotImplementedError
+
+    @classmethod
+    def get_controllers(
+        cls,
+        players: int = 1,
+        speed: int = 1,
+    ) -> list[ControllerType]:
+        """Base implementation for getting all Joystick controllers for each player
+
+        Args:
+            players (int, optional): The number of players. Defaults to 1.
+            speed (int, optional): Scalar multiple applied to controller output. Defaults to 1.
+
+        Returns:
+            list[ControllerType]: A list of controllers for each player
+        """
+        joysticks = []
+        print(f"controller type: {cls.ControllerType.__name__}")
+        if get_joystick_count() >= players:
+            for i in range(players):
+                new_joystick = cls.new_controller_instance(
+                    joystick=Joystick(i),
+                    speed=speed,
+                )
+                joysticks.append(new_joystick)
+
+        return joysticks
+
+
 class JoystickController(Controller):
     """Joystick base class.  Implements Controller class action(key) method.
     Abstract class that requires implementation for direction() method.
@@ -207,63 +268,3 @@ DEFAULT_KEYBOARD_CONTROLLER = DefaultKeyboardController(
         "action_type": "button",
     },
 )
-
-
-class ControllerHandler:
-    """Helper class for getting controllers
-    Override ControllerHandler.ControllerType type alias, and implement
-    new_controller_instance(joy, speed, *args, **kwargs) method
-    """
-
-    ControllerType = Controller
-
-    @classmethod
-    def new_controller_instance(
-        cls,
-        joystick: JoystickType,
-        speed: int,
-        *args: VectorAction,
-        **kwargs: VectorAction,
-    ) -> ControllerType:
-        """Creates a new instance of ControllerType with given args
-
-        Args:
-            input (pygame.JoystickType): The pygame Joystick reference
-            speed (int): Scalar multiple applied to controller output
-            *args (VectorAction): A list of action metadata for the controller
-            **kwargs (VectorAction): A mapping of metadata for the controller
-
-        Raises:
-            NotImplementedError: Abstract method
-
-        Returns:
-            ControllerType: the new instance of ControllerType
-        """
-        raise NotImplementedError
-
-    @classmethod
-    def get_controllers(
-        cls,
-        players: int = 1,
-        speed: int = 1,
-    ) -> list[ControllerType]:
-        """Base implementation for getting all Joystick controllers for each player
-
-        Args:
-            players (int, optional): The number of players. Defaults to 1.
-            speed (int, optional): Scalar multiple applied to controller output. Defaults to 1.
-
-        Returns:
-            list[ControllerType]: A list of controllers for each player
-        """
-        joysticks = []
-        print(f"controller type: {cls.ControllerType.__name__}")
-        if get_joystick_count() >= players:
-            for j in range(players):
-                new_joystick = cls.new_controller_instance(
-                    joystick=Joystick(j),
-                    speed=speed,
-                )
-                joysticks.append(new_joystick)
-
-        return joysticks

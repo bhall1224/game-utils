@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Optional, Union
+from typing import Optional, Union, Callable
 import pygame
 
 from .sprites import GameSprite
@@ -11,7 +11,7 @@ class Game:
     are referenced in run()
     """
 
-    class Settings:
+    class ScreenSettings:
         """Summary class defines information needed to udpate the screen"""
 
         def __init__(
@@ -29,7 +29,10 @@ class Game:
             self.frames_per_second = frames_per_second
 
     def __init__(
-        self, settings: Settings, player_sprite: GameSprite, *other_sprites: GameSprite
+        self,
+        screen_settings: ScreenSettings,
+        player_sprite: GameSprite,
+        *other_sprites: GameSprite,
     ):
         """Create new instance of Game object
 
@@ -38,28 +41,35 @@ class Game:
             player_sprite (GameSprite): The sprite to be used for the player
             *other_sprites (GameSprite): Any other sprites needed for the game
         """
-        self.settings = settings
+        self.running = False
+        self.screen_settings = screen_settings
         self.player_sprite = player_sprite
         self.screen = pygame.display.set_mode(
-            (self.settings.width, self.settings.height)
+            (self.screen_settings.width, self.screen_settings.height)
         )
         self.other_sprites = other_sprites
         self.other_sprites_group: pygame.sprite.Group = pygame.sprite.Group()
         for sprite in other_sprites:
             self.other_sprites_group.add(sprite)
 
-    def run(self):
+    def run(self, *event_handlers: Callable[[pygame.event.Event], None]):
         """Runs and maintains the game loop and clock.
         Invokes pygame.quit() when pygame.QUIT event is reached
         """
+        self.running = True
         clock = pygame.time.Clock()
         dt = 0
-        while not self._is_quit():
+        while self.running:
             self._update_screen()
             self._update_sprites(dt)
             self._update_collisions(dt)
-            pygame.display.flip()
             dt = self._get_delta_time(clock)
+            pygame.display.flip()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                for handler in event_handlers:
+                    handler(event)
         pygame.quit()
 
     @abstractmethod
@@ -80,18 +90,11 @@ class Game:
         pass
 
     def _get_delta_time(self, clock: pygame.time.Clock) -> float:
-        return clock.tick(self.settings.frames_per_second) / 1000
+        return clock.tick(self.screen_settings.frames_per_second) / 1000
 
     def _update_screen(self):
         """Blits the screen if there's a background image and fills background color, if they exist in the settings"""
-        if self.settings.bg_image is not None:
-            self.screen.blit(self.settings.bg_image, (0, 0))
-        if self.settings.bg_color is not None:
-            self.screen.fill(self.settings.bg_color)
-
-    def _is_quit(self) -> bool:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return True
-
-        return False
+        if self.screen_settings.bg_image is not None:
+            self.screen.blit(self.screen_settings.bg_image, (0, 0))
+        if self.screen_settings.bg_color is not None:
+            self.screen.fill(self.screen_settings.bg_color)
