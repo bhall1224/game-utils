@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Any, Optional
+from typing import Any, Optional, Callable
 from pygame import Rect, Surface, Vector2
 from pygame.sprite import Sprite
 
@@ -34,17 +34,23 @@ class GameSprite(Sprite):
     def update(self, *args: Any, **kwargs: Any):
         pass
 
-    def _update_pos(self, *args: Any, **kwargs: Any):
+    def _update_pos(
+        self,
+        position: Optional[Vector2] = None,
+        **kwargs: Callable[[], None],
+    ):
         """Updates position of this sprite.  If I have boundaries,
         I will bind this sprite's position.
-        Pass callables in **kwargs.
 
         Args:
-            xbounds (() -> None): a function to call when X bounds is met
-            ybounds (() -> None): a function to call when Y bounds is met
+            **kwargs (Any): pass callables here if you want special behavior
+            when a boundary is met. Key should be the axis
         """
-        xbounds = kwargs.get("xbounds")
-        ybounds = kwargs.get("ybounds")
+        if position is not None:
+            self.position = position
+
+        xbounds = kwargs.get("x")
+        ybounds = kwargs.get("y")
         x, y, w, h = self.rect
 
         if self.boundaries is not None:

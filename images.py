@@ -59,11 +59,7 @@ class SpriteSheetList(SpriteSheet):
 
 
 class SpriteSheetMap(SpriteSheetList):
-    """Implements a sprite sheet as a dictionary of sprites
-
-    Args:
-        SpriteSheetList (_type_): _description_
-    """
+    """Implements a sprite sheet as a dictionary of sprites"""
 
     def __init__(
         self,

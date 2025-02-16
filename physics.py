@@ -13,19 +13,38 @@ class PhysicsBody:
         mass: float = 1.0,
         position: Vector2 = ZERO_VECTOR.copy(),
         friction: float = 0.0,
-        elasticity: float = 1.0,
+        elasticity: float = 0.0,
         slip: float = 1.0,
-    ) -> None:
+    ):
+        """Creates new instance of PhysicsBody object
+
+        Args:
+            mass (float, optional): The mass of the body. Defaults to 1.0.
+            position (Vector2, optional): The current positional vector of the body. Defaults to (0,0).
+            friction (float, optional): Static friction force. Defaults to 0.0.
+            elasticity (float, optional): Elasticity is used in caluclating loss of energy. 0 elasticity will have no effect. Defaults to 0.0.
+            slip (float, optional): Used in calculating change in static to kinetic friction. Defaults to 1.0.
+        """
         self.mass = mass
         self.velociy = self.ZERO_VECTOR.copy()
         self.position = position
         self.static_friction = friction
         self.kinetic_friction = 0
-        self.elasticity = elasticity
+        self.elasticity = 1 - elasticity
         if self.static_friction > 0:
             self.kinetic_friction = self.static_friction * normal(loc=slip)
 
     def force(self, acceleration: Vector2, dtime: float) -> Vector2:
+        """Applies an acceleration vector to this body's current velocity with the given change in time.
+        If friction was given, friction is calculated into the new velocity
+
+        Args:
+            acceleration (Vector2): The acceleration to apply
+            dtime (float): The change in time
+
+        Returns:
+            Vector2: The new velocity
+        """
         new_velocity = acceleration * dtime
         force = acceleration * self.mass
 
@@ -43,8 +62,13 @@ class PhysicsBody:
         return self.position
 
     def on_collide(self, other):
-        # New velocity is given by V`= (V(m-s) + U2s)/(m+s)
-        # for initial magnitudes Vm(self) and Us(other)
+        """New velocity is given by V`= (V(m-s) + U2s)/(m+s)
+        for initial magnitudes Vm(self) and Us(other).  Calculates loss of
+        energy from this body's elasticity
+
+        Args:
+            other (object): The object with which this body has collided
+        """
         assert isinstance(other, PhysicsBody)
 
         self.velociy *= self.mass - other.mass
@@ -55,12 +79,27 @@ class PhysicsBody:
         self.velociy *= self.elasticity
 
     def momentum(self) -> Vector2:
+        """This body's current momentum
+
+        Returns:
+            Vector2: Vm of this body
+        """
         return self.velociy * self.mass
 
     def normal_force(self) -> Vector3:
+        """The normal force of this body
+
+        Returns:
+            Vector3: (0, 0, mg)
+        """
         return Vector3(0, 0, self.mass * self.GRAVITY)
 
     def friction_force(self) -> Vector3:
+        """fs * N if not in motion, else fk * N
+
+        Returns:
+            Vector3: (0, 0, fN)
+        """
         return (
             self.static_friction * self.normal_force()
             if self.velociy == self.ZERO_VECTOR
