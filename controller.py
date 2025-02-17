@@ -1,4 +1,6 @@
-from abc import ABC, abstractmethod
+import logging
+
+from abc import abstractmethod
 from enum import Enum
 from typing import Any, Literal, TypedDict
 
@@ -7,6 +9,8 @@ from pygame.key import get_pressed as get_pressed_keys
 from pygame.joystick import Joystick, JoystickType
 from pygame.joystick import get_count as get_joystick_count
 from pygame.locals import K_UP, K_LEFT, K_DOWN, K_RIGHT
+
+logger = logging.getLogger("__main__")
 
 
 class VectorAction(TypedDict):
@@ -94,22 +98,19 @@ class Controller:
 
 class ControllerHandler:
     """Helper class for getting controllers
-    Override ControllerHandler.ControllerType type alias, and implement
-    new_controller_instance(joy, speed, *args, **kwargs) method
+    Implement cls._new_controller_instance(joy, speed, *args, **kwargs) method
     """
-
-    ControllerType = Controller
 
     @classmethod
     @abstractmethod
-    def new_controller_instance(
+    def _new_controller_instance(
         cls,
         joystick: JoystickType,
         speed: int,
         *args: VectorAction,
         **kwargs: VectorAction,
-    ) -> ControllerType:
-        """Creates a new instance of ControllerType with given args
+    ) -> Controller:
+        """Creates a new instance of Controller with given args
 
         Args:
             input (pygame.JoystickType): The pygame Joystick reference
@@ -121,7 +122,7 @@ class ControllerHandler:
             NotImplementedError: Abstract method
 
         Returns:
-            ControllerType: the new instance of ControllerType
+            Controller: the new instance of Controller
         """
         raise NotImplementedError
 
@@ -130,7 +131,7 @@ class ControllerHandler:
         cls,
         players: int = 1,
         speed: int = 1,
-    ) -> list[ControllerType]:
+    ) -> list[Controller]:
         """Base implementation for getting all Joystick controllers for each player
 
         Args:
@@ -138,19 +139,22 @@ class ControllerHandler:
             speed (int, optional): Scalar multiple applied to controller output. Defaults to 1.
 
         Returns:
-            list[ControllerType]: A list of controllers for each player
+            list[Controller]: A list of controllers for each player
         """
-        joysticks = []
-        print(f"controller type: {cls.ControllerType.__name__}")
-        if get_joystick_count() >= players:
-            for i in range(players):
-                new_joystick = cls.new_controller_instance(
-                    joystick=Joystick(i),
-                    speed=speed,
-                )
-                joysticks.append(new_joystick)
+        controllers = []
+        for i in range(get_joystick_count()):
+            new_controller = cls._new_controller_instance(
+                joystick=Joystick(i),
+                speed=speed,
+            )
+            controllers.append(new_controller)
 
-        return joysticks
+        if len(controllers) < players:
+            logger.warning(
+                f"Not enough controllers for players! (Players: {players}, Controllers: {len(controllers)})"
+            )
+
+        return controllers
 
 
 class JoystickController(Controller):
