@@ -6,7 +6,7 @@ from pygame import Vector2
 from pygame.key import get_pressed as get_pressed_keys
 from pygame.joystick import Joystick, JoystickType
 from pygame.joystick import get_count as get_joystick_count
-from pygame.locals import *
+from pygame.locals import K_UP, K_LEFT, K_DOWN, K_RIGHT
 
 
 class VectorAction(TypedDict):
@@ -100,8 +100,8 @@ class ControllerHandler:
 
     ControllerType = Controller
 
-    @abstractmethod
     @classmethod
+    @abstractmethod
     def new_controller_instance(
         cls,
         joystick: JoystickType,
