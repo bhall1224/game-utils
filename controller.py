@@ -14,13 +14,12 @@ logger = logging.getLogger("__main__")
 
 
 class VectorAction(TypedDict):
-    """Metadata for controller actions. Joystick axis/hat/button id's are mapped to
-    unique keys that correspond to controller behaviors
+    """Mapping of controller ID to action
 
     Args:
         input_id (int): The unique id of the button or axis
         action_type (str): Axis or button type. Only [axis, button] allowed
-        action_name (str): The name of the action. Used as unique key in controller action
+        action_name (str): The name of the action. Should be unique
     """
 
     input_id: int
@@ -29,9 +28,9 @@ class VectorAction(TypedDict):
 
 
 class Controller:
-    """Abstract base class for controller behavior. Implementation for direction() method is required.
-    Optionally there are definitions for rotations and actions.  VectorActions are metadata that describe
-    what the controller should do (see also VectorAction)
+    """Abstract class for controller
+    Must implement 'direction' method
+    Optional rotation and action methods
     """
 
     def __init__(

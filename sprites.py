@@ -1,5 +1,6 @@
 from abc import abstractmethod
-from typing import Any, Optional, Callable
+from typing import Any
+from collections.abc import Callable
 from pygame import Rect, Surface, Vector2
 from pygame.sprite import Sprite
 
@@ -12,7 +13,7 @@ class GameSprite(Sprite):
         self,
         image: Surface,
         position: Vector2,
-        boundaries: Optional[Rect] = None,
+        boundaries: Rect | None = None,
         id: int = 0,
     ):
         """Implement a Game Sprite object. Subclass must implement GameSprite.update
@@ -20,7 +21,7 @@ class GameSprite(Sprite):
         Args:
             image (Surface): The image for the sprite
             position (Vector2): Where to put the sprite
-            boundaries (Optional[Rect], optional): Optional boundary vectors for this sprite (xmax, xmin, ymax, ymin). Defaults to None.
+            boundaries (Rect | None, optional): Optional boundary vectors for this sprite (xmax, xmin, ymax, ymin). Defaults to None.
         """
         super().__init__()
         self.image = image
@@ -36,7 +37,7 @@ class GameSprite(Sprite):
 
     def _update_pos(
         self,
-        position: Optional[Vector2] = None,
+        position: Vector2 | None = None,
         **kwargs: Callable[[], None],
     ):
         """Updates position of this sprite.  If I have boundaries,
@@ -97,7 +98,7 @@ class PhysicsSprite(GameSprite):
         image: Surface,
         position: Vector2,
         physics_body: PhysicsBody,
-        boundaries: Optional[Rect] = None,
+        boundaries: Rect | None = None,
         id: int = 0,
     ):
         super().__init__(image, position, boundaries, id)
@@ -114,7 +115,7 @@ class PlayerSprite(PhysicsSprite):
         position: Vector2,
         controller: Controller,
         physics_body: PhysicsBody,
-        boundaries: Optional[Rect] = None,
+        boundaries: Rect | None = None,
         id: int = 0,
     ):
         super().__init__(image, position, physics_body, boundaries, id)

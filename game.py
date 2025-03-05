@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Optional, Union, Callable
+from collections.abc import Callable
 import pygame
 
 from .sprites import GameSprite
@@ -12,15 +12,15 @@ class Game:
     """
 
     class ScreenSettings:
-        """Summary class defines information needed to udpate the screen"""
+        """defines information needed to udpate the screen"""
 
         def __init__(
             self,
             width: float,
             height: float,
             frames_per_second: int = 60,
-            bg_color: Optional[Union[str, tuple[int, int, int]]] = None,
-            bg_image: Optional[pygame.Surface] = None,
+            bg_color: tuple[int, int, int] | str | None = None,
+            bg_image: pygame.Surface | None = None,
         ):
             self.height = height
             self.width = width
