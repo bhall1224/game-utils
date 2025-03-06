@@ -22,5 +22,4 @@ controller.py:
         - _new_controller_instance: (joy, int, *VectorAction, **VectorAction) -> Controller
         - get_controllers: (int, int | float) -> list[Controller]
 ```
-
----
+[back](../README.md)

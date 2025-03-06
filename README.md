@@ -13,7 +13,7 @@
 
 ---
 
-### Package Modules
+## Package Modules
 
 ### [controller.py](docs/controller.md)
 
@@ -30,25 +30,25 @@
 
 ---
 
-### The Story
+## The Story
 
 <p>Why?  Because you need a break my friend.  You want to make games with <b><i>Pygame</i></b> and <b><i>Python</i></b>, but you want a little help with the boilerplate stuff.</p>  
 <p>I get it.  You got into it, and thought YEAH this is awesome!  But now... you realize how much work will go into making your killer game idea a reality with these tools.</p>  
 <p>That's where I come in!  Use this code at your convenience.  Stick it to the man, man!</p>
 
-### See Also...
+## See Also...
 
 <p><b>These are games I have made using <i>Pygame</i>, with the help of the modules in this project</b></p>
 
-- Air Hockey [src]()
+- Air Hockey [src](https://gitlab.com/madmadam/games/air_hockey)
 
 <p><b>Check out my <i>Pygame</i> console project using this package</b></p>
 
-- System-B [src]()
+- System-B [src](https://gitlab.com/madmadam/games/system-b)
 
 <p><b>My ongoing game projects</b></p>
 
-- Madmadam Games [gitlab]()
+- Madmadam Games [gitlab](https://gitlab.com/madmadam/games)
 
 ### Appendix
 
