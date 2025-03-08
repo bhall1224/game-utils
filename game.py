@@ -16,17 +16,21 @@ class Game:
 
         def __init__(
             self,
-            width: float,
-            height: float,
+            width: float = 0.0,
+            height: float = 0.0,
             frames_per_second: int = 60,
             bg_color: tuple[int, int, int] | str | None = None,
             bg_image: pygame.Surface | None = None,
         ):
-            self.height = height
-            self.width = width
             self.bg_image = bg_image
             self.bg_color = bg_color
             self.frames_per_second = frames_per_second
+            if width == 0.0 and height == 0.0:
+                self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+            else:
+                self.screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+            self.width = self.screen.get_width()
+            self.height = self.screen.get_height()
 
     def __init__(
         self,
@@ -44,9 +48,6 @@ class Game:
         self.running = False
         self.screen_settings = screen_settings
         self.player_sprite = player_sprite
-        self.screen = pygame.display.set_mode(
-            (self.screen_settings.width, self.screen_settings.height)
-        )
         self.other_sprites = other_sprites
         self.other_sprites_group: pygame.sprite.Group = pygame.sprite.Group()
         for sprite in other_sprites:
@@ -95,6 +96,6 @@ class Game:
     def _update_screen(self):
         """Blits the screen if there's a background image and fills background color, if they exist in the settings"""
         if self.screen_settings.bg_image is not None:
-            self.screen.blit(self.screen_settings.bg_image, (0, 0))
+            self.screen_settings.screen.blit(self.screen_settings.bg_image, (0, 0))
         if self.screen_settings.bg_color is not None:
-            self.screen.fill(self.screen_settings.bg_color)
+            self.screen_settings.screen.fill(self.screen_settings.bg_color)

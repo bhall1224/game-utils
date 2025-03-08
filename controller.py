@@ -4,7 +4,7 @@ from abc import abstractmethod
 from enum import Enum
 from typing import Any, Literal, TypedDict
 
-from pygame import Vector2
+from pygame import K_ESCAPE, Vector2
 from pygame.key import get_pressed as get_pressed_keys
 from pygame.joystick import Joystick, JoystickType
 from pygame.joystick import get_count as get_joystick_count
@@ -208,6 +208,7 @@ class KeyboardController(Controller):
         X_AXIS_NEG = "x_axis_neg"
         Y_AXIS_POS = "y_axis_pos"
         Y_AXIS_NEG = "y_axis_neg"
+        QUIT = "quit"
 
     def get_keys(self) -> Any:
         return get_pressed_keys()
@@ -266,6 +267,11 @@ DEFAULT_KEYBOARD_CONTROLLER = DefaultKeyboardController(
     {
         "input_id": K_UP,
         "action_name": KeyboardController.Commands.Y_AXIS_NEG.value,
+        "action_type": "button",
+    },
+    {
+        "input_id": K_ESCAPE,
+        "action_name": KeyboardController.Commands.QUIT.value,
         "action_type": "button",
     },
 )
