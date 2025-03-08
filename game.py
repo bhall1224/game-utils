@@ -27,15 +27,17 @@ class Game:
             self.frames_per_second = frames_per_second
             if width == 0.0 and height == 0.0:
                 self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+                self.width = self.screen.get_width()
+                self.height = self.screen.get_height()
             else:
-                self.screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
-            self.width = self.screen.get_width()
-            self.height = self.screen.get_height()
+                self.width = width
+                self.height = height
+                self.screen = pygame.display.set_mode((width, height))
 
     def __init__(
         self,
         screen_settings: ScreenSettings,
-        player_sprite: GameSprite,
+        player_sprite: GameSprite | None,
         *other_sprites: GameSprite,
     ):
         """Create new instance of Game object
@@ -49,7 +51,7 @@ class Game:
         self.screen_settings = screen_settings
         self.player_sprite = player_sprite
         self.other_sprites = other_sprites
-        self.other_sprites_group: pygame.sprite.Group = pygame.sprite.Group()
+        self.other_sprites_group = pygame.sprite.Group()
         for sprite in other_sprites:
             self.other_sprites_group.add(sprite)
 
