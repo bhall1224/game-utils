@@ -247,7 +247,7 @@ class DefaultKeyboardController(KeyboardController):
         return Vector2(vx, vy)
 
 
-DEFAULT_KEYBOARD_ACTIONS = [
+DEFAULT_KEYBOARD_ACTIONS: list[VectorAction] = [
     {
         "input_id": K_RIGHT,
         "action_name": KeyboardController.Commands.X_AXIS_POS.value,
