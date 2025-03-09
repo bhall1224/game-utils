@@ -247,8 +247,7 @@ class DefaultKeyboardController(KeyboardController):
         return Vector2(vx, vy)
 
 
-DEFAULT_KEYBOARD_CONTROLLER = DefaultKeyboardController(
-    1500,
+DEFAULT_KEYBOARD_ACTIONS = [
     {
         "input_id": K_RIGHT,
         "action_name": KeyboardController.Commands.X_AXIS_POS.value,
@@ -274,4 +273,4 @@ DEFAULT_KEYBOARD_CONTROLLER = DefaultKeyboardController(
         "action_name": KeyboardController.Commands.QUIT.value,
         "action_type": "button",
     },
-)
+]

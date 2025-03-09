@@ -37,7 +37,7 @@ class Game:
     def __init__(
         self,
         screen_settings: ScreenSettings,
-        player_sprite: GameSprite | None,
+        player_sprite: GameSprite | None = None,
         *other_sprites: GameSprite,
     ):
         """Create new instance of Game object

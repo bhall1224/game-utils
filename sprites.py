@@ -38,20 +38,19 @@ class GameSprite(Sprite):
     def _update_pos(
         self,
         position: Vector2 | None = None,
-        **kwargs: Callable[[], None],
+        xbounds: Callable[[], None] | None = None,
+        ybounds: Callable[[], None] | None = None,
     ):
-        """Updates position of this sprite.  If I have boundaries,
-        I will bind this sprite's position.
+        """Updates position of this sprite. Maintains any given boundaries. Invokes callbacks given when boundaries are reached
 
         Args:
-            **kwargs (Any): pass callables here if you want special behavior
-            when a boundary is met. Key should be the axis
+            position (Vector2 | None, optional): _description_. Defaults to None.
+            xbounds (Callable[[], None] | None, optional): _description_. Defaults to None.
+            ybounds (Callable[[], None] | None, optional): _description_. Defaults to None.
         """
         if position is not None:
             self.position = position
 
-        xbounds = kwargs.get("x")
-        ybounds = kwargs.get("y")
         x, y, w, h = self.rect
 
         if self.boundaries is not None:
