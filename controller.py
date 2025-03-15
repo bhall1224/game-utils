@@ -166,7 +166,6 @@ class JoystickController(Controller):
         self,
         input: JoystickType,
         speed: int = 1,
-        /,
         *args: VectorAction,
         **kwargs: VectorAction,
     ):

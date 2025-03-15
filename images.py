@@ -1,12 +1,10 @@
-from typing import Optional
-
 from pygame import Rect, Surface
 
 
 class SpriteSheet:
     """Allows user to access segements of a sprite sheet"""
 
-    def __init__(self, spritesheet: Surface, bg_color: Optional[str] = None) -> None:
+    def __init__(self, spritesheet: Surface, bg_color: str | None = None) -> None:
         self.spritesheet = spritesheet
         self.rect = self.spritesheet.get_rect()
         self.bg_color = bg_color
@@ -35,7 +33,7 @@ class SpriteSheetList(SpriteSheet):
         spritesheet: Surface,
         n_sprites: int = 1,
         n_lists: int = 1,
-        bg_color: Optional[str] = None,
+        bg_color: str | None = None,
     ) -> None:
         super().__init__(spritesheet, bg_color)
         self.n_sprites = n_sprites
@@ -67,7 +65,7 @@ class SpriteSheetMap(SpriteSheetList):
         keys: list[str] = ["0"],
         n_sprites: int = 1,
         n_lists: int = 1,
-        bg_color: Optional[str] = None,
+        bg_color: str | None = None,
     ) -> None:
         super().__init__(spritesheet, n_sprites, n_lists, bg_color)
         if len(keys) < len(self.sprite_rects):
@@ -78,13 +76,13 @@ class SpriteSheetMap(SpriteSheetList):
             self.keys[i]: self.sprite_rects[i] for i in range(len(self.keys))
         }
 
-    def get(self, name) -> Optional[Surface]:
+    def get(self, name) -> Surface | None:
         s = self.sprite_map.get(name)
 
         if s is not None:
             return self.get_spritesheet_segment(s)
 
-    def __getattribute__(self, name: str) -> Optional[Surface]:
+    def __getattribute__(self, name: str) -> Surface | None:
         s = self.sprite_map.get(name)
 
         if s is None:
