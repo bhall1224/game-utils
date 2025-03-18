@@ -1,19 +1,16 @@
 [project]
-name = "Game Utils"
-version = "0.0.1"
+name = "game-utils"
+version = "0.1.0"
 authors = [
-    {
-        name="Bee Hall", 
-        email="bhall1224@gmail.com"
-    }
+    { name="Bee Hall", email="bhall1224@gmail.com" },
 ]
-description = ""
+description = "A pygame engine for common game operations like vector math and maintaining events in the game loop"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent:
+    "Operating System :: OS Independent",
 ]
 
 [project.urls]

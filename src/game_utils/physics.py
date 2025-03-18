@@ -12,6 +12,7 @@ class PhysicsBody:
         self,
         mass: float = 1.0,
         position: Vector2 = ZERO_VECTOR.copy(),
+        velocity: Vector2 = ZERO_VECTOR.copy(),
         friction: float = 0.0,
         elasticity: float = 0.0,
         slip: float = 1.0,
@@ -26,8 +27,8 @@ class PhysicsBody:
             slip (float, optional): Used in calculating change in static to kinetic friction. Defaults to 1.0.
         """
         self.mass = mass
-        self.velociy = self.ZERO_VECTOR.copy()
-        self.position = position
+        self.velociy = velocity.copy()
+        self.position = position.copy()
         self.static_friction = friction
         self.kinetic_friction = 0
         self.elasticity = 1 - elasticity
@@ -43,7 +44,7 @@ class PhysicsBody:
             dtime (float): The change in time
 
         Returns:
-            Vector2: The new velocity
+            Vector2: The new velocity at this moment in time
         """
         new_velocity = acceleration * dtime
         force = acceleration * self.mass
@@ -54,12 +55,14 @@ class PhysicsBody:
             self.velociy -= self.velociy * self.friction_force().magnitude() * dtime
         self.move(dtime)
 
-        return self.velociy
+        return self.velociy.copy()
 
     def move(self, dtime: float) -> Vector2:
+        """Returns the position at this moment in time.\n
+        Applies velocity over dtime"""
         self.position += self.velociy * dtime
 
-        return self.position
+        return self.position.copy()
 
     def on_collide(self, other):
         """New velocity is given by V`= (V(m-s) + U2s)/(m+s)

@@ -1,5 +1,8 @@
 # Game Utilities
+
 ## `game_utils` package for *Pygame* implementations  
+
+>0.1.0
 
 * This package contains classes, methods, and various *Python* programs to use in your *Pygame* games.
 

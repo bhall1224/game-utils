@@ -1,5 +1,8 @@
 __pycache__/
 *.log
 .vscode/
-.venv/
+**/.*venv/
+**/*.egg*/*
 .env
+dist/
+build/
