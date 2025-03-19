@@ -23,7 +23,7 @@ class VectorAction(TypedDict):
     """
 
     input_id: int
-    action_type: Literal["axis", "button"]
+    action_type: Literal["axis", "button", "hat"]
     action_name: str
 
 
@@ -35,9 +35,8 @@ class Controller:
 
     def __init__(
         self,
-        speed: int = 1,
-        /,
         *args: VectorAction,
+        speed: int = 1,
         **kwargs: VectorAction,
     ):
         """Creates new instance of Controller object.
@@ -165,8 +164,8 @@ class JoystickController(Controller):
     def __init__(
         self,
         input: JoystickType,
-        speed: int = 1,
         *args: VectorAction,
+        speed: int = 1,
         **kwargs: VectorAction,
     ):
         """_summary_
@@ -177,7 +176,7 @@ class JoystickController(Controller):
             *args (VectorAction): A list of action metadata for the controller
             **kwargs (VectorAction): A mapping of metadata for the controller
         """
-        super().__init__(speed, *args, **kwargs)
+        super().__init__(*args, speed=speed, **kwargs)
         self.input = input
 
     def action(self, key: str) -> float:

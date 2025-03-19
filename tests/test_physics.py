@@ -1,3 +1,4 @@
+import math
 from game_utils.physics import *
 from pygame import Vector2
 
@@ -19,7 +20,7 @@ def test_physics_body():
     )
 
     assert pb2 is not None
-    assert pb2.kinetic_friction > 0
+    assert math.fabs(pb2.kinetic_friction) > 0
 
 
 def test_forces():

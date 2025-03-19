@@ -25,9 +25,7 @@ class SpriteSheet:
         return image
 
 
-class SpriteSheetList(SpriteSheet):
-    """implements sprite sheet as a list of sprites.  sprites are indexed"""
-
+class SpriteSheetDataStruct(SpriteSheet):
     def __init__(
         self,
         spritesheet: Surface,
@@ -36,17 +34,25 @@ class SpriteSheetList(SpriteSheet):
         bg_color: str | None = None,
     ) -> None:
         super().__init__(spritesheet, bg_color)
+        self.n_lists = n_lists
         self.n_sprites = n_sprites
         self.sprite_size = Rect((0, 0), (self.rect.height, self.rect.width / n_sprites))
-        self.sprite_rects = [
+        self.sprite_rects = self._get_sprite_rects()
+
+    def _get_sprite_rects(self) -> list[Rect]:
+        return [
             # add a new rectangle for n sprites in this sheet (by m lists)
             Rect(
                 (self.sprite_size.x + i * self.sprite_size.w, self.sprite_size.y),
                 self.sprite_size.size,
             )
             for i in range(self.n_sprites)
-            for _ in range(n_lists)
+            for _ in range(self.n_lists)
         ]
+
+
+class SpriteSheetList(SpriteSheetDataStruct):
+    """implements sprite sheet as a list of sprites.  sprites are indexed"""
 
     def __getitem__(self, index: int) -> Surface:
         if index >= len(self.sprite_rects):
@@ -56,7 +62,7 @@ class SpriteSheetList(SpriteSheet):
         return self.get_spritesheet_segment(self.sprite_rects[index])
 
 
-class SpriteSheetMap(SpriteSheetList):
+class SpriteSheetMap(SpriteSheetDataStruct):
     """Implements a sprite sheet as a dictionary of sprites"""
 
     def __init__(
@@ -82,7 +88,7 @@ class SpriteSheetMap(SpriteSheetList):
         if s is not None:
             return self.get_spritesheet_segment(s)
 
-    def __getattribute__(self, name: str) -> Surface | None:
+    def __getitem__(self, name: str) -> Surface | None:
         s = self.sprite_map.get(name)
 
         if s is None:

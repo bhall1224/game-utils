@@ -1,61 +1,41 @@
-# Game Utilities
+# Game Utils
 
-## `game_utils` package for *Pygame* implementations  
+>0.1.1
 
->0.1.0
+## `game-utils` is a pygame engine.  The engine includes modules to facilitate boilerplate game operations. 
 
-* This package contains classes, methods, and various *Python* programs to use in your *Pygame* games.
+### Installation
 
-* These are for the various necessities in your implementation:
-    - maintaining the game loop
-    - writing to the screen
-    - getting controller input
-    - physics
-    - sprites
-    - and sprite sheets
+`pip install -i https://test.pypi.org/simple/ game-utils`
+
+### Example usage
+
+```python
+from game_utils import Game
+
+class MyAwesomeGame(Game):
+    def _update_screen(self):
+        self.screen_settings.screen.fill(
+            self.screen_settings.bg_color or "dodgerblue2"
+        )
+
+
+if __name__ == "__main__":
+    game = MyAwesomeGame(
+        screen_settings=Game.ScreenSettings(
+            bg_color="coral2"
+        )
+    )
+
+    print("Starting game...")
+    game.run()
+    print("Thanks for playing!")
+```
 
 ---
-
-## Package Modules
-
-### [controller.py](docs/controller.md)
-
-### [game.py](docs/game.md)
-
-### [images.py](docs/images.md)
-
-### [physics.py](docs/physics.md)
-
-### [sprites.py](docs/sprites.md)
-
-### [vector_utils.py](docs/vector_utils.md)
-
-
----
-
-## The Story
-
-<p>Why?  Because you need a break my friend.  You want to make games with <b><i>Pygame</i></b> and <b><i>Python</i></b>, but you want a little help with the boilerplate stuff.</p>  
-<p>I get it.  You got into it, and thought YEAH this is awesome!  But now... you realize how much work will go into making your killer game idea a reality with these tools.</p>  
-<p>That's where I come in!  Use this code at your convenience.  Stick it to the man, man!</p>
 
 ## See Also...
-
-<p><b>These are games I have made using <i>Pygame</i>, with the help of the modules in this project</b></p>
-
-- Air Hockey [src](https://gitlab.com/madmadam/games/air_hockey)
-
-<p><b>Check out my <i>Pygame</i> console project using this package</b></p>
-
-- System-B [src](https://gitlab.com/madmadam/games/system-b)
 
 <p><b>My ongoing game projects</b></p>
 
 - Madmadam Games [gitlab](https://gitlab.com/madmadam/games)
-
-### Appendix
-
-- Git Submodules [docs](https://git-scm.com/book/en/v2/Git-Tools-Submodules)
-- YAML [docs](https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html)
-- Pygame [docs](https://www.pygame.org/docs/)
-- Python [docs](https://www.python.org/)
