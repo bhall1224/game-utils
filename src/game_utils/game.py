@@ -48,7 +48,6 @@ class Game:
 
         def resize_screen(self, width: float = 0.0, height: float = 0.0):
             """resizes to fullscreen by default"""
-
             self.width = width
             self.height = height
             self.activate_screen()

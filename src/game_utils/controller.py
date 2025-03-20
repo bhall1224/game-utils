@@ -10,7 +10,7 @@ from pygame.joystick import Joystick, JoystickType
 from pygame.joystick import get_count as get_joystick_count
 from pygame.locals import K_UP, K_LEFT, K_DOWN, K_RIGHT
 
-logger = logging.getLogger("__main__")
+logger = logging.getLogger(__name__)
 
 
 class VectorAction(TypedDict):
@@ -201,15 +201,6 @@ class KeyboardController(Controller):
     Adds get_keys() method that gets all keyboard keys pressed
     """
 
-    class Commands(Enum):
-        """Constant keyboard commands"""
-
-        X_AXIS_POS = "x_axis_pos"
-        X_AXIS_NEG = "x_axis_neg"
-        Y_AXIS_POS = "y_axis_pos"
-        Y_AXIS_NEG = "y_axis_neg"
-        QUIT = "quit"
-
     def get_keys(self) -> Any:
         return get_pressed_keys()
 
@@ -226,6 +217,15 @@ class KeyboardController(Controller):
 
 
 class DefaultKeyboardController(KeyboardController):
+    class Commands(Enum):
+        """Constant keyboard commands"""
+
+        X_AXIS_POS = "x_axis_pos"
+        X_AXIS_NEG = "x_axis_neg"
+        Y_AXIS_POS = "y_axis_pos"
+        Y_AXIS_NEG = "y_axis_neg"
+        QUIT = "quit"
+
     """A simple Keyboard Controller implementation"""
 
     def direction(self) -> Vector2:
@@ -250,27 +250,27 @@ class DefaultKeyboardController(KeyboardController):
 DEFAULT_KEYBOARD_ACTIONS: list[VectorAction] = [
     {
         "input_id": K_RIGHT,
-        "action_name": KeyboardController.Commands.X_AXIS_POS.value,
+        "action_name": DefaultKeyboardController.Commands.X_AXIS_POS.value,
         "action_type": "button",
     },
     {
         "input_id": K_LEFT,
-        "action_name": KeyboardController.Commands.X_AXIS_NEG.value,
+        "action_name": DefaultKeyboardController.Commands.X_AXIS_NEG.value,
         "action_type": "button",
     },
     {
         "input_id": K_DOWN,
-        "action_name": KeyboardController.Commands.Y_AXIS_POS.value,
+        "action_name": DefaultKeyboardController.Commands.Y_AXIS_POS.value,
         "action_type": "button",
     },
     {
         "input_id": K_UP,
-        "action_name": KeyboardController.Commands.Y_AXIS_NEG.value,
+        "action_name": DefaultKeyboardController.Commands.Y_AXIS_NEG.value,
         "action_type": "button",
     },
     {
         "input_id": K_ESCAPE,
-        "action_name": KeyboardController.Commands.QUIT.value,
+        "action_name": DefaultKeyboardController.Commands.QUIT.value,
         "action_type": "button",
     },
 ]
