@@ -1,12 +1,14 @@
 # Game Utils
 
->0.1.1
+>0.1.2
 
 ## `game-utils` is a pygame engine.  The engine includes modules to facilitate boilerplate game operations. 
 
-### Installation
+### Requirements
 
-`pip install -i https://test.pypi.org/simple/ game-utils`
+**Dependences:**
+- pygame
+- numpy
 
 ### Example usage
 
