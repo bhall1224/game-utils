@@ -1,6 +1,6 @@
 # Game Utils
 
->0.1.3
+>0.2.0
 
 ## `game-utils` is a pygame engine.  The engine includes modules to facilitate boilerplate game operations. 
 
