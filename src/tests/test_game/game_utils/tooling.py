@@ -3,8 +3,6 @@
 import click
 import os
 import subprocess
-import zipfile
-import shutil
 
 
 @click.group()
@@ -43,28 +41,20 @@ def _package_for_batocera(game: str | None, path: str | None):
         return
 
     print(f"packaging game {game_file} for batocera pygame port")
-    # download the game_utils package
+    game = game_file.rstrip(".py")
     subprocess.run(
         ["wget", UTILS_URL, "-qO", output_file_path],
         check=True,
     )
-
-    # extract the download, and copy the module package here
-    with zipfile.ZipFile(output_file_path, "r") as zip_file:
-        zip_file.extractall(path)
-    shutil.move(
-        src=os.path.join(path, "game_utils-master", "src", "game_utils"), dst=path
+    subprocess.run(["unzip", "-q", output_file_path, "-d", path])
+    subprocess.run(
+        ["mv", os.path.join(path, "game_utils-master", "src", "game_utils"), path]
     )
-
-    # create a .pygame copy of the main file
-    game_name = game_file.rstrip(".py")
-    shutil.copy(
-        src=os.path.join(path, game_file), dst=os.path.join(path, f"{game_name}.pygame")
+    subprocess.run(
+        ["cp", os.path.join(path, game_file), os.path.join(path, f"{game}.pygame")]
     )
-
-    # delete job files
-    os.remove(output_file_path)
-    shutil.rmtree(os.path.join(path, "game_utils-master"))
+    subprocess.run(["rm", output_file_path])
+    subprocess.run(["rm", "-r", os.path.join(path, "game_utils-master")])
 
 
 def _get_game_file(path: str, entry_point: str | None) -> str | None:

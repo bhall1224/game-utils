@@ -70,6 +70,14 @@ if __name__ == "__main__":
     print("Thanks for playing!")
 ```
 
+### Tooling
+
+These are tools for various packaging strategies for your game
+
+```bash
+python -m game_utils.tooling package batocera
+```
+
 ---
 
 ## See Also...
