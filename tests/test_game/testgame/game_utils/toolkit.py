@@ -26,9 +26,7 @@ def package(mode: str, game: str | None, path: str | None):
 
 
 def default_package(
-    game: str | None = None,
-    path: str | None = None,
-    game_file: str | None = None,
+    game: str | None = None, path: str | None = None, game_file: str | None = None
 ):
     path = path or os.getcwd()
     game_file = game_file or _get_game_file(
@@ -38,21 +36,16 @@ def default_package(
     print(f"game file path: {game_path}")
     game_name = game or os.path.dirname(game_path)
     zip_package = f"{game_name}.zip"
-    with zipfile.ZipFile(os.path.join(path, zip_package), "w") as archive:
-        for dirpath, dirnames, filenames in os.walk(path):
-            for file in filenames:
-                if file != zip_package:
-                    fpath = os.path.join(dirpath, file)
-                    archive.write(fpath, os.path.relpath(fpath, path))
-
-            for dir in dirnames:
-                dpath = os.path.join(dirpath, dir)
-                archive.write(dpath, os.path.relpath(dpath, path))
+    with zipfile.ZipFile(os.path.join(path, zip_package), "w") as zip_file:
+        for f in os.listdir(path):
+            arcpath = os.path.relpath(path)
+            zip_file.write(os.path.join(arcpath, f))
 
 
 def package_for_batocera(
     game: str | None = None,
     path: str | None = None,
+    allow_none: bool = True,
 ):
     MODULE_IMPORT = "game_utils-main"
     UTILS_URL = "https://gitlab.com/madmadam/games/game_utils/-/archive/main/game_utils-main.zip"
@@ -60,7 +53,7 @@ def package_for_batocera(
 
     path = path or os.getcwd()
     zip_export_path = os.path.join(path, MODULE_OUTPUT_FILE)
-    game_file = _get_game_file(entry_point=game, path=path)
+    game_file = _get_game_file(entry_point=game, path=path, allow_none=allow_none)
 
     if game_file is None:
         print(f"unable to package game")

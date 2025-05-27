@@ -1,4 +1,3 @@
-import shutil
 import os
 import src.game_utils.toolkit as toolkit
 
@@ -7,31 +6,33 @@ TEST_GAME_PATH = os.path.join(TEST_PATH, "test_game")
 
 
 def test_batocera_package_path():
-    def _clear():
-        os.remove(os.path.join(TEST_GAME_PATH, "testgame.zip"))
-
-    lib_path = os.path.join(TEST_GAME_PATH, "game_utils")
-    if os.path.exists(lib_path):
-        _clear()
-
     assert os.path.exists(TEST_GAME_PATH)
     assert os.path.exists(os.path.join(TEST_GAME_PATH, "testgame.py"))
 
     toolkit.package_for_batocera("testgame", TEST_GAME_PATH)
 
-    assert os.path.exists(os.path.join(TEST_GAME_PATH, "testgame.zip"))
+    zip_path = os.path.join(TEST_GAME_PATH, "testgame.zip")
+    assert os.path.exists(zip_path)
 
-    _clear()
+    size = os.path.getsize(zip_path)
+    print(f"zip size: {size}")
+    assert size > 5000
+
+    _clear_zips()
 
 
 def test_default_package():
-    def _clear():
-        os.remove(os.path.join(TEST_GAME_PATH, "testgame.zip"))
-
-    if os.path.exists(os.path.join(TEST_GAME_PATH, "testgame.zip")):
-        _clear()
-
     toolkit.default_package("testgame", TEST_GAME_PATH)
-    assert os.path.exists(os.path.join(TEST_GAME_PATH, "testgame.zip"))
 
-    _clear()
+    zip_path = os.path.join(TEST_GAME_PATH, "testgame.zip")
+    assert os.path.exists(zip_path)
+
+    size = os.path.getsize(zip_path)
+    print(f"zip size: {size}")
+    assert size > 100
+
+    _clear_zips()
+
+
+def _clear_zips():
+    os.remove(os.path.join(TEST_GAME_PATH, "testgame.zip"))
