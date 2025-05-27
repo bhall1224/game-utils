@@ -1,6 +1,6 @@
 # Game Utils
 
->0.2.1
+>0.2.2
 
 ## `game-utils` is a pygame engine.  The engine includes modules to facilitate boilerplate game operations. 
 
@@ -80,10 +80,10 @@ These are tools for various packaging strategies for your game
 Example:
 
 ```bash
-python -m game_utils.toolkit package batocera
+python -m game_utils.toolkit package --mode batocera
 ```
 
-Executing this will package your pygame/game-utils game for playing on Batocera pygame ports
+Executing this command in the root directory of your game will package your pygame/game-utils game for playing on Batocera pygame ports
 
 ---
 

@@ -82,7 +82,12 @@ def package_for_batocera(
     os.remove(zip_export_path)
     shutil.rmtree(os.path.join(path, "game_utils-master"))
 
+    # package the game
     default_package(game, path, game_file)
+
+    # remove generated files
+    shutil.rmtree(os.path.join(path, "game_utils"))
+    os.remove(os.path.join(path, f"{game_name}.pygame"))
 
 
 def _get_game_file(
