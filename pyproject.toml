@@ -1,6 +1,6 @@
 [project]
 name = "game-utils"
-version = "0.2.2"
+version = "0.2.3"
 authors = [
     { name="Bee Hall", email="bhall1224@gmail.com" },
 ]

@@ -47,7 +47,8 @@ def package_for_batocera(
     path: str | None = None,
     allow_none: bool = True,
 ):
-    UTILS_URL = "https://gitlab.com/madmadam/games/game_utils/-/archive/master/game_utils-master.zip"
+    MODULE_IMPORT = "game_utils-main"
+    UTILS_URL = "https://gitlab.com/madmadam/games/game_utils/-/archive/main/game_utils-main.zip"
     MODULE_OUTPUT_FILE = "game_utils.zip"
 
     path = path or os.getcwd()
@@ -68,9 +69,7 @@ def package_for_batocera(
     # extract the download, and copy the module package here
     with zipfile.ZipFile(zip_export_path, "r") as zip_file:
         zip_file.extractall(path)
-    shutil.move(
-        src=os.path.join(path, "game_utils-master", "src", "game_utils"), dst=path
-    )
+    shutil.move(src=os.path.join(path, MODULE_IMPORT, "src", "game_utils"), dst=path)
 
     # create a .pygame copy of the main file
     game_name = game_file.rstrip(".py")
@@ -80,7 +79,7 @@ def package_for_batocera(
 
     # delete job files
     os.remove(zip_export_path)
-    shutil.rmtree(os.path.join(path, "game_utils-master"))
+    shutil.rmtree(os.path.join(path, MODULE_IMPORT))
 
     # package the game
     default_package(game, path, game_file)
