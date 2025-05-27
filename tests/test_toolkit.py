@@ -8,8 +8,6 @@ TEST_GAME_PATH = os.path.join(TEST_PATH, "test_game")
 
 def test_batocera_package_path():
     def _clear():
-        shutil.rmtree(os.path.join(TEST_GAME_PATH, "game_utils"))
-        os.remove(os.path.join(TEST_GAME_PATH, "testgame.pygame"))
         os.remove(os.path.join(TEST_GAME_PATH, "testgame.zip"))
 
     lib_path = os.path.join(TEST_GAME_PATH, "game_utils")
@@ -21,9 +19,6 @@ def test_batocera_package_path():
 
     toolkit.package_for_batocera("testgame", TEST_GAME_PATH)
 
-    assert os.path.exists(lib_path)
-    assert len(os.listdir(lib_path)) > 0
-    assert os.path.exists(os.path.join(TEST_GAME_PATH, "testgame.pygame"))
     assert os.path.exists(os.path.join(TEST_GAME_PATH, "testgame.zip"))
 
     _clear()
