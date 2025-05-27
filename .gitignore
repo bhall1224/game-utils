@@ -2,8 +2,9 @@ __pycache__/
 *.log
 .vscode/
 **/.*venv/
-**/*.egg*/*
+**/*.egg*
 .env
 dist/
 build/
 *.zip
+.pytest*

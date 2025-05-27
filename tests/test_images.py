@@ -1,4 +1,4 @@
-from game_utils.images import *
+from src.game_utils.images import *
 from pygame import Rect, Surface
 
 SPRITESHEET_SIM_RECT = Rect(0, 0, 100, 100)

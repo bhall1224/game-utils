@@ -1,5 +1,5 @@
 import math
-from game_utils.physics import *
+from src.game_utils.physics import *
 from pygame import Vector2
 
 

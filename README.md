@@ -1,6 +1,6 @@
 # Game Utils
 
->0.2.0
+>0.2.1
 
 ## `game-utils` is a pygame engine.  The engine includes modules to facilitate boilerplate game operations. 
 
@@ -9,6 +9,7 @@
 **Dependences:**
 - pygame
 - numpy
+- click
 
 ### Example usage
 
@@ -70,13 +71,19 @@ if __name__ == "__main__":
     print("Thanks for playing!")
 ```
 
-### Tooling
+### Toolkit
+
+**Packaging**
 
 These are tools for various packaging strategies for your game
 
+Example:
+
 ```bash
-python -m game_utils.tooling package batocera
+python -m game_utils.toolkit package batocera
 ```
+
+Executing this will package your pygame/game-utils game for playing on Batocera pygame ports
 
 ---
 

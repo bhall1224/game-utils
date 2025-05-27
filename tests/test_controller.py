@@ -1,6 +1,5 @@
 from pygame import Vector2
-from game_utils.controller import *
-from game_utils.controller import VectorAction
+from src.game_utils.controller import *
 
 VALUES = [0.1, 2.2, 4.7]
 DIRECTIONS = [
@@ -10,21 +9,21 @@ DIRECTIONS = [
 ]
 
 
-class TestActions(Enum):
+class MockActions(Enum):
     ACTION_A = 0
     ACTION_B = 1
     ACTION_C = 2
     ACTION_Z = -1
 
 
-class TestController(Controller):
+class MockController(Controller):
     def __init__(self, *args: VectorAction, speed: int = 1, **kwargs: VectorAction):
         super().__init__(*args, speed=speed, **kwargs)
-        self.action_: TestActions | None = None
+        self.action_: MockActions | None = None
 
     def direction(self) -> Vector2:
         if not self.action_:
-            self.action_ = TestActions.ACTION_Z
+            self.action_ = MockActions.ACTION_Z
 
         return DIRECTIONS[self.action_.value]
 
@@ -34,27 +33,27 @@ class TestController(Controller):
 
 
 def test_controller():
-    c = TestController(
+    c = MockController(
         {
-            "input_id": TestActions.ACTION_A.value,
+            "input_id": MockActions.ACTION_A.value,
             "action_type": "hat",
-            "action_name": TestActions.ACTION_A.name,
+            "action_name": MockActions.ACTION_A.name,
         },
         {
-            "input_id": TestActions.ACTION_B.value,
+            "input_id": MockActions.ACTION_B.value,
             "action_type": "axis",
-            "action_name": TestActions.ACTION_B.name,
+            "action_name": MockActions.ACTION_B.name,
         },
         {
-            "input_id": TestActions.ACTION_C.value,
+            "input_id": MockActions.ACTION_C.value,
             "action_type": "button",
-            "action_name": TestActions.ACTION_C.name,
+            "action_name": MockActions.ACTION_C.name,
         },
     )
 
-    assert c.action(TestActions.ACTION_A.name) == VALUES[TestActions.ACTION_A.value]
-    assert c.action(TestActions.ACTION_C.name) == VALUES[TestActions.ACTION_Z.value]
+    assert c.action(MockActions.ACTION_A.name) == VALUES[MockActions.ACTION_A.value]
+    assert c.action(MockActions.ACTION_C.name) == VALUES[MockActions.ACTION_Z.value]
 
     assert c.direction() == DIRECTIONS[-1]
-    c.action_ = TestActions.ACTION_B
+    c.action_ = MockActions.ACTION_B
     assert c.direction() == DIRECTIONS[1]
