@@ -1,6 +1,6 @@
 [project]
 name = "game-utils"
-version = "0.2.3"
+version = "0.2.4"
 authors = [
     { name="Bee Hall", email="bhall1224@gmail.com" },
 ]
@@ -19,7 +19,7 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://gitlab.com/madmadam/games/game_utils"
+"Homepage" = "https://gitlab.com/bhall/game_utils.git"
 
 [build-system]
 requires = ["setuptools"]
