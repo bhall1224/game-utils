@@ -1,6 +1,7 @@
 from abc import abstractmethod
-from typing import Any
 from collections.abc import Callable
+from typing import Any
+
 from pygame import Rect, Surface, Vector2
 from pygame.sprite import Sprite
 
@@ -33,7 +34,12 @@ class GameSprite(Sprite):
 
     @abstractmethod
     def update(self, *args: Any, **kwargs: Any):
-        pass
+        """Required.  Define logic to perform on this sprite once for every game loop
+
+        Args:
+            *args, **kwargs
+        """
+        raise NotImplementedError()
 
     def _update_pos(
         self,
@@ -44,9 +50,9 @@ class GameSprite(Sprite):
         """Updates position of this sprite. Maintains any given boundaries. Invokes callbacks given when boundaries are reached
 
         Args:
-            position (Vector2 | None, optional): _description_. Defaults to None.
-            xbounds (Callable[[], None] | None, optional): _description_. Defaults to None.
-            ybounds (Callable[[], None] | None, optional): _description_. Defaults to None.
+            position (Vector2 | None, optional): The new position of this sprite. Defaults to None.
+            xbounds (Callable[[], None] | None, optional): X boundary callable. Invoked when boundaries are reached, if given. Defaults to None.
+            ybounds (Callable[[], None] | None, optional): Y boundary callable. Invoked when boundaries are reached, if given. Defaults to None.
         """
         if position is not None:
             self.position = position

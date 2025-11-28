@@ -1,16 +1,12 @@
-import logging
-
 from abc import abstractmethod
 from enum import Enum
 from typing import Any, Literal, TypedDict
 
 from pygame import K_ESCAPE, Vector2
-from pygame.key import get_pressed as get_pressed_keys
 from pygame.joystick import Joystick, JoystickType
 from pygame.joystick import get_count as get_joystick_count
-from pygame.locals import K_UP, K_LEFT, K_DOWN, K_RIGHT
-
-logger = logging.getLogger(__name__)
+from pygame.key import get_pressed as get_pressed_keys
+from pygame.locals import K_DOWN, K_LEFT, K_RIGHT, K_UP
 
 
 class VectorAction(TypedDict):
@@ -35,14 +31,14 @@ class Controller:
 
     def __init__(
         self,
+        speed: float = 1.0,
         *args: VectorAction,
-        speed: int = 1,
         **kwargs: VectorAction,
     ):
         """Creates new instance of Controller object.
 
         Args:
-            speed (int, optional): Scalar multiple applied to controller output. Defaults to 1.
+            speed (float, optional): Scalar multiple applied to controller output. Defaults to 1.
             *args (VectorAction): A list of action metadata for the controller
             **kwargs (VectorAction): A mapping of metadata for the controller
         """
@@ -81,7 +77,7 @@ class Controller:
         raise NotImplementedError()
 
     def action(self, key: str) -> float:
-        """_summary_
+        """Applies Vector Action for the given key, if it exists
 
         Args:
             key (str): The unique key(name) of the action
@@ -105,7 +101,7 @@ class ControllerHandler:
     def _new_controller_instance(
         cls,
         joystick: JoystickType,
-        speed: int,
+        speed: float,
         *args: VectorAction,
         **kwargs: VectorAction,
     ) -> Controller:
@@ -113,7 +109,7 @@ class ControllerHandler:
 
         Args:
             input (pygame.JoystickType): The pygame Joystick reference
-            speed (int): Scalar multiple applied to controller output
+            speed (float): Scalar multiple applied to controller output
             *args (VectorAction): A list of action metadata for the controller
             **kwargs (VectorAction): A mapping of metadata for the controller
 
@@ -129,13 +125,13 @@ class ControllerHandler:
     def get_controllers(
         cls,
         players: int = 1,
-        speed: int = 1,
+        speed: float = 1.0,
     ) -> list[Controller]:
         """Base implementation for getting all Joystick controllers for each player
 
         Args:
             players (int, optional): The number of players. Defaults to 1.
-            speed (int, optional): Scalar multiple applied to controller output. Defaults to 1.
+            speed (float, optional): Scalar multiple applied to controller output. Defaults to 1.
 
         Returns:
             list[Controller]: A list of controllers for each player
@@ -149,7 +145,7 @@ class ControllerHandler:
             controllers.append(new_controller)
 
         if len(controllers) < players:
-            logger.warning(
+            print(
                 f"Not enough controllers for players! (Players: {players}, Controllers: {len(controllers)})"
             )
 
@@ -164,15 +160,15 @@ class JoystickController(Controller):
     def __init__(
         self,
         input: JoystickType,
+        speed: float = 1,
         *args: VectorAction,
-        speed: int = 1,
         **kwargs: VectorAction,
     ):
         """_summary_
 
         Args:
             input (pygame.JoystickType): The pygame Joystick reference
-            speed (int, optional): Scalar multiple applied to controller output. Defaults to 1.
+            speed (float, optional): Scalar multiple applied to controller output. Defaults to 1.
             *args (VectorAction): A list of action metadata for the controller
             **kwargs (VectorAction): A mapping of metadata for the controller
         """
@@ -180,6 +176,14 @@ class JoystickController(Controller):
         self.input = input
 
     def action(self, key: str) -> float:
+        """Vector actions for Keyboard input
+
+        Args:
+            key (str): The unique key of the action. Can be a Pygame local
+
+        Returns:
+            float: The result of the Vector Action
+        """
         vector_action = self._actions.get(key)
 
         if vector_action is not None:
@@ -202,6 +206,11 @@ class KeyboardController(Controller):
     """
 
     def get_keys(self) -> Any:
+        """Pygame keys tuple
+
+        Returns:
+            Any: The list of all keys currently pressed
+        """
         return get_pressed_keys()
 
     def action(self, key: str) -> float:

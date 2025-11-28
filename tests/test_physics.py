@@ -1,6 +1,8 @@
 import math
-from src.game_utils.physics import *
+
 from pygame import Vector2
+
+from game_utils.physics import *
 
 
 def test_physics_body():

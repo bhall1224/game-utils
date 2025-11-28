@@ -1,6 +1,6 @@
 # Game Utils
 
->0.2.3
+>1.0.0
 
 ## `game-utils` is a pygame engine.  The engine includes modules to facilitate boilerplate game operations. 
 
@@ -9,16 +9,16 @@
 **Dependences:**
 - pygame
 - numpy
-- click
 
 ### Example usage
 
 ```python
 from game_utils.game import Game
+from game_utils.screen import ScreenSettings
 import pygame
 
 class MyAwesomeGame(Game):
-    def __init__(self, player_speed: int, screen_settings: Game.ScreenSettings):
+    def __init__(self, player_speed: int, screen_settings: ScreenSettings):
         super().__init__(screen_settings)
 
         # Where, and how big, to draw the player.
@@ -55,6 +55,11 @@ class MyAwesomeGame(Game):
 
         self.player_rect.move_ip((-left + right, -up + down))
 
+    def _events(self, event: pygame.events.Event):
+        pressed_keys = pygame.key.get_pressed()
+        if pressed_keys[pygame.ESCAPE]:
+            self.running = False
+
 if __name__ == "__main__":
     # these could also come from a config file
     game = MyAwesomeGame(
@@ -73,18 +78,19 @@ if __name__ == "__main__":
 
 ### Toolkit
 
-**Packaging**
+**Manual library installation**
 
-These are tools for various packaging strategies for your game
+Run this command in your pygame project to install the game-utils package manually into your code base
 
-Example:
+>python -m game-utils.toolkit
 
-```bash
-python -m game_utils.toolkit package --mode batocera
-```
+This will download the whole library into your project.  Some platforms don't allow you to add Python packages, so
+it might be prudent to pull this library directly into your code.  Batocera is an example, as well as other Raspberry Pi systems that come packaged without the ability to install new software.
 
-Executing this command in the root directory of your game will package your pygame/game-utils game for playing on Batocera pygame ports
+**Demo Game**
+Run:
 
+>python -m game-utils.demo
 ---
 
 ## See Also...

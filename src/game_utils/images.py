@@ -26,6 +26,8 @@ class SpriteSheet:
 
 
 class SpriteSheetDataStruct(SpriteSheet):
+    """Base Sprite Sheet structure for sprite sheet data structures"""
+
     def __init__(
         self,
         spritesheet: Surface,

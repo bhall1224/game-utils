@@ -1,6 +1,6 @@
 [project]
 name = "game-utils"
-version = "0.2.4"
+version = "1.0.0"
 authors = [
     { name="Bee Hall", email="bhall1224@gmail.com" },
 ]
@@ -24,6 +24,3 @@ dependencies = [
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]

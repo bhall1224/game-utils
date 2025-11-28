@@ -1,5 +1,6 @@
-from src.game_utils.images import *
 from pygame import Rect, Surface
+
+from game_utils.images import *
 
 SPRITESHEET_SIM_RECT = Rect(0, 0, 100, 100)
 SPRITESHEET_SIM__SURFACT = Surface(SPRITESHEET_SIM_RECT.size)

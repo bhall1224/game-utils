@@ -1,104 +1,72 @@
-from abc import abstractmethod
-from collections.abc import Callable
-import pygame
 import logging
+from abc import abstractmethod
+
+import pygame
+
+from .screen import ScreenSettings
 from .sprites import GameSprite
 
 logger = logging.getLogger(__name__)
 
-ColorType = str | tuple[int, int, int] | pygame.Color
-
 
 class Game:
     """Game class defines high-level game logic. This class includes a run method, which controls the game loop.
-    User is required to implement abstract methods _update(), which is invoked within run()
+    User is required to implement abstract methods self._update() and self._events(), which is invoked within self.run()
     """
 
-    class ScreenSettings:
-        """defines information needed to udpate the screen"""
-
-        def __init__(
-            self,
-            *,
-            width: float = 0.0,
-            height: float = 0.0,
-            frames_per_second: int = 60,
-            bg_color: ColorType | None = None,
-            bg_image: pygame.Surface | None = None,
-            no_screen: bool = False,
-        ):
-            self.bg_image = bg_image
-            self.bg_color = bg_color
-            self.frames_per_second = frames_per_second
-            self.width = width
-            self.height = height
-            self.no_screen = no_screen
-
-            if not self.no_screen:
-                self.activate_screen()
-
-        def activate_screen(self):
-            self.no_screen = False
-            if self.width == 0.0 and self.height == 0.0:
-                self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-                self.width = self.screen.get_width()
-                self.height = self.screen.get_height()
-            else:
-                self.screen = pygame.display.set_mode((self.width, self.height))
-
-        def resize_screen(self, width: float = 0.0, height: float = 0.0):
-            """resizes to fullscreen by default"""
-            self.width = width
-            self.height = height
-            self.activate_screen()
-
-    def __init__(self, screen_settings: ScreenSettings):
-        """Invokes pygame.init()
+    def __init__(self, screen_settings: ScreenSettings | None = None):
+        """Invokes pygame.init(), configures clock and screen settings
 
         Args:
             screen_settings (ScreenSettings): Any screen settings
         """
         pygame.init()
-        self.clock = pygame.time.Clock()
         self.dt = 0
         self.running = False
         self.screen_settings = screen_settings
 
-    def run(self, *event_handlers: Callable[[pygame.event.Event], None]):
+    def run(self):
         """Runs and maintains the game loop and clock. Updates the screen and invokes any handlers
         Invokes pygame.quit() when pygame.QUIT event is reached
         """
         logger.debug("starting game...")
         self.running = True
         while self.running:
-            self.dt = self._get_delta_time()
             self._update()
-            if not self.screen_settings.no_screen:
-                self._update_screen()
+            if self.screen_settings is not None:
+                self.screen_settings.update_screen()
+                self.dt = self.screen_settings.get_delta_time()
                 pygame.display.flip()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
-                for handler in event_handlers:
-                    handler(event)
+                self._events(event)
+
         pygame.quit()
 
-    def _get_delta_time(self) -> float:
-        return self.clock.tick(self.screen_settings.frames_per_second) / 1000
+    def _events(self, event: pygame.event.Event, *args, **kwargs):
+        """Define custom event handlers.  Optional.  Called once per game loop
 
-    def _update_screen(self):
+        Args:
+            event (pygame.event.Event): The event passed from run() method
+            *args/**kwargs
+        """
         pass
 
     @abstractmethod
     def _update(self):
+        """Required implentation of game logic. Called once per game loop.
+
+        Raises:
+            NotImplementedError: Required implementation
+        """
         raise NotImplementedError()
 
 
 class SpriteGame(Game):
-
     def __init__(
         self,
-        screen_settings: Game.ScreenSettings,
+        screen_settings: ScreenSettings,
         player_sprite: GameSprite | None = None,
         *other_sprites: GameSprite,
     ):
@@ -106,7 +74,7 @@ class SpriteGame(Game):
         implement _update_sprites()
 
         Args:
-            settings (Settings): Information needed to update the screen
+            settings (ScreenSettings): Information needed to update the screen
             player_sprite (GameSprite): The sprite to be used for the player
             *other_sprites (GameSprite): Any other sprites needed for the game
         """
@@ -119,7 +87,7 @@ class SpriteGame(Game):
 
     @abstractmethod
     def _update_sprites(self):
-        """Defines behavior for all GameSprite objects over time
+        """Defines behavior for all GameSprite objects over time.  Called once per game loop
 
         Args:
             dt (float): change in time

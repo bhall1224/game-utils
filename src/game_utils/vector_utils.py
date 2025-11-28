@@ -1,6 +1,7 @@
+from collections.abc import Callable
+
 from numpy.random import choice, rand
 from pygame import Vector2
-from collections.abc import Callable
 
 
 def get_random_vector(scalar_mag: int = 1, non_negative: bool = False) -> Vector2:
@@ -13,7 +14,9 @@ def get_random_vector(scalar_mag: int = 1, non_negative: bool = False) -> Vector
     )
 
 
-def apply(vector: Vector2, *actions: Callable[[Vector2], Vector2]) -> Vector2:
+def apply_vector_actions(
+    vector: Vector2, *actions: Callable[[Vector2], Vector2]
+) -> Vector2:
     for action in actions:
         vector = action(vector)
 
