@@ -18,8 +18,8 @@ class MockActions(Enum):
 
 
 class MockController(Controller):
-    def __init__(self, *args: VectorAction, speed: int = 1, **kwargs: VectorAction):
-        super().__init__(*args, speed=speed, **kwargs)
+    def __init__(self, *args: VectorAction, **kwargs: VectorAction):
+        super().__init__(0, *args, **kwargs)
         self.action_: MockActions | None = None
 
     def direction(self) -> Vector2:
@@ -29,8 +29,8 @@ class MockController(Controller):
         return DIRECTIONS[self.action_.value]
 
     def action(self, key: str) -> float:
-        assert self._actions.get(key)
-        return VALUES[self._actions[key]["input_id"]]
+        assert self.actions.get(key)
+        return VALUES[self.actions[key]["input_id"]]
 
 
 def test_controller():

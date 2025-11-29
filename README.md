@@ -1,6 +1,6 @@
 # Game Utils
 
->1.0.0
+>1.1.0
 
 ## `game-utils` is a pygame engine.  The engine includes modules to facilitate boilerplate game operations. 
 
@@ -10,84 +10,23 @@
 - pygame
 - numpy
 
-### Example usage
-
-```python
-from game_utils.game import Game
-from game_utils.screen import ScreenSettings
-import pygame
-
-class MyAwesomeGame(Game):
-    def __init__(self, player_speed: int, screen_settings: ScreenSettings):
-        super().__init__(screen_settings)
-
-        # Where, and how big, to draw the player.
-        # I like to scale things by the screen size.
-        self.player_radius = self.screen_settings.height / 4
-        self.player_rect = pygame.Rect(
-            self.screen_settings.height / 2 - self.player_radius,
-            self.screen_settings.width / 2 - self.player_radius,
-            self.player_radius * 2,
-            self.player_radisu * 2,
-        )
-        self.player_speed = player_speed
-
-    def _update_screen(self):
-        self.screen_settings.screen.fill(
-            self.screen_settings.bg_color or "dodgerblue2"
-        )
-
-        pygame.draw.circle(
-            self.screen_settings.screen,
-            "lightseagreen",
-            self.player_rect.center,
-            self.player_radius
-        )
-
-    def _update(self):
-        # any other game logic...
-        # This came from a tutorial I found on custom events...
-        pressed_keys = pygame.key.get_pressed()
-        up, down, left, right = map(
-            lambda key: key * self.player_speed,
-            [pressed_keys[key] for key in [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]] 
-        )
-
-        self.player_rect.move_ip((-left + right, -up + down))
-
-    def _events(self, event: pygame.events.Event):
-        pressed_keys = pygame.key.get_pressed()
-        if pressed_keys[pygame.ESCAPE]:
-            self.running = False
-
-if __name__ == "__main__":
-    # these could also come from a config file
-    game = MyAwesomeGame(
-        player_speed=10,
-        screen_settings=Game.ScreenSettings(
-            bg_color="coral2",
-            width=600,
-            height=400
-        )
-    )
-
-    print("Starting game...")
-    game.run()
-    print("Thanks for playing!")
-```
-
 ### Toolkit
 
 **Manual library installation**
 
 Run this command in your pygame project to install the game-utils package manually into your code base
 
->python -m game-utils.toolkit
+>python -m game_utils.toolkit --install
 
 This will download the whole library into your project.  Some platforms don't allow you to add Python packages, so
 it might be prudent to pull this library directly into your code.  Batocera is an example, as well as other Raspberry Pi systems that come packaged without the ability to install new software.
 
+Run this command to generate a sample Game-Utils project from the demo game
+
+>python -m game_utils.toolkit --sample-project
+
 **Demo Game**
+
 Run:
 
 >python -m game-utils.demo
@@ -97,4 +36,4 @@ Run:
 
 <p><b>My ongoing game projects</b></p>
 
-- Madmadam Games [gitlab](https://gitlab.com/madmadam/games)
+- Bee Hall [gitlab](https://gitlab.com/bhall)

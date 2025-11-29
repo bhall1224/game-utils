@@ -1,6 +1,6 @@
 [project]
 name = "game-utils"
-version = "1.0.0"
+version = "1.1.0"
 authors = [
     { name="Bee Hall", email="bhall1224@gmail.com" },
 ]
@@ -14,8 +14,7 @@ classifiers = [
 ]
 dependencies = [
     "pygame",
-    "numpy",
-    "click"
+    "numpy"
 ]
 
 [project.urls]

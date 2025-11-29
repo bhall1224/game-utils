@@ -3,6 +3,7 @@
 import os
 import shutil
 import subprocess
+import sys
 import zipfile
 
 MODULE = "game_utils"
@@ -30,5 +31,37 @@ def install_package():
     print("install complete")
 
 
+def copy_demo_project():
+    shutil.copy(os.path.join(os.path.dirname(__file__), "demo.py"), os.curdir)
+    src = os.path.join(os.path.dirname(__file__), ".config")
+    dst = os.path.join(os.getcwd(), ".config")
+    if os.path.isdir(src):
+        if os.path.exists(dst):
+            # merge: copy contents into existing .config
+            for root, dirs, files in os.walk(src):
+                rel = os.path.relpath(root, src)
+                target_root = os.path.join(dst, rel) if rel != "." else dst
+                os.makedirs(target_root, exist_ok=True)
+                for f in files:
+                    shutil.copy2(os.path.join(root, f), os.path.join(target_root, f))
+        else:
+            shutil.copytree(src, dst)
+
+
 if __name__ == "__main__":
-    install_package()
+    if len(sys.argv) == 2 and "--install" in sys.argv:
+        install_package()
+
+    if len(sys.argv) == 2 and "--sample-project" in sys.argv:
+        copy_demo_project()
+
+    if len(sys.argv) == 1:
+        print("Game Utils Package")
+        print("Toolkit usage:")
+        help = "\n".join(
+            [
+                "--install\t\tinstall the library code into the code base",
+                "--sample-project\tcopy the demo project and configurations to CWD",
+            ]
+        )
+        print(help)

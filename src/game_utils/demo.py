@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from typing import Any, Literal
 
 import pygame.display as display
 import pygame.draw as draw
@@ -7,12 +6,12 @@ import pygame.event
 import pygame.sprite as sprite
 from pygame import Rect, Surface, Vector2
 
-from .controller import DEFAULT_KEYBOARD_ACTIONS, DefaultKeyboardController
-from .game import SpriteGame
-from .physics import PhysicsBody
-from .screen import ScreenSettings
-from .sprites import PhysicsSprite, PlayerSprite
-from .vector_utils import apply_vector_actions, get_random_vector
+from game_utils.controller import DEFAULT_KEYBOARD_ACTIONS, DefaultKeyboardController
+from game_utils.game import SpriteGame
+from game_utils.physics import PhysicsBody
+from game_utils.screen import ScreenSettings
+from game_utils.sprites import PhysicsSprite, PlayerSprite
+from game_utils.vector_utils import apply_vector_actions, get_random_vector
 
 
 class BouncyBallPlayer(PlayerSprite):
@@ -30,7 +29,7 @@ class BouncyBallPlayer(PlayerSprite):
         self.collided = False
         self.color = color
 
-    def update(self, *args: Any, **kwargs: Any):
+    def update(self, *args, **kwargs):
         dt = args[0]
 
         # sync position and physics body
@@ -82,7 +81,7 @@ class BouncyBallPuck(PhysicsSprite):
         self.physics_body.velociy = get_random_vector(speed)
         self.start_position = Vector2.copy(position)
 
-    def update(self, *args: Any, **kwargs: Any):
+    def update(self, *args, **kwargs):
         reset = kwargs.get("reset")
         if reset is not None:
             self.reset(position=reset)
@@ -119,8 +118,8 @@ class BouncyBallPuck(PhysicsSprite):
 class BouncyBallSettings(ScreenSettings):
     def __init__(
         self,
-        player,
-        puck,
+        player: BouncyBallPlayer,
+        puck: BouncyBallPuck,
         *,
         width=0,
         height=0,
@@ -172,13 +171,11 @@ class BouncyBall(SpriteGame):
     ):
         # configure sprites
         super().__init__(settings, player_sprite, *other_sprites)
-        # overloads type
-        self.puck = other_sprites[0]
-        self.player_sprite = player_sprite
-        display.set_caption("Air Hockey")
+        display.set_caption("Game Utils Demo Game")
+        self.puck: BouncyBallPuck = self.other_sprites_group.sprites()[0]
 
-    def _update(self):
-        self._update_sprites()
+    def update(self):
+        self.update_sprites()
 
     def __update_player(self):
         self.player_sprite.update(self.dt)
@@ -187,12 +184,13 @@ class BouncyBall(SpriteGame):
         self.puck.physics_body.move(self.dt)
         self.puck.update()
 
-    def _update_sprites(self):
+    def update_sprites(self):
         self.__update_player()
         self.__update_puck()
         self.__update_collisions()
 
     def __update_collisions(self):
+        assert isinstance(self.player_sprite, BouncyBallPlayer)
 
         if sprite.collide_circle(self.player_sprite, self.puck):
             if not self.player_sprite.collided:
@@ -213,24 +211,28 @@ if __name__ == "__main__":
         mode="r",
         encoding="utf-8",
     ) as input_file:
+        # load config file as a dictionary
         input_params = json.load(input_file)
 
-        screen = input_params["screen"]
-        controller = input_params["controller"]
+        # properties
+        screen_data = input_params["screen"]
+        controller_data = input_params["controller"]
         player_data = input_params["player"]
         puck_data = input_params["puck"]
-        table_color = input_params["table"]["color"]
+        table_data = input_params["table"]
 
-        ctrl_speed = controller["speed"]
+        # set configurations
+        table_color = table_data["color"]
+        ctrl_speed = controller_data["speed"]
         player_physics = player_data["physics_body"]
         player_color = player_data["color"]
         puck_physics = puck_data["physics_body"]
         puck_color = puck_data["color"]
-
-        screen_w = screen["width"]
+        screen_w = screen_data["width"]
         screen_h = screen_w / 16 * 9  # screen["height"]
-
         puck_size = screen_h / 9 / 2
+
+        # configure sprites
         player = BouncyBallPlayer(
             image=Surface((puck_size, puck_size)),
             position=Vector2(screen_w / 2, screen_h / 2),
@@ -257,10 +259,13 @@ if __name__ == "__main__":
             ),
             color=puck_color,
         )
+
+        # screen settings and configurations
         settings = BouncyBallSettings(
             player, puck, width=screen_w, height=screen_h, bg_color=table_color
         )
 
+        # load sprites and configurations
         game = BouncyBall(settings, player, puck)
 
         print("Starting game...")

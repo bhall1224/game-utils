@@ -3,7 +3,7 @@ __pycache__/
 .vscode/
 **/.*venv/
 **/*.egg*
-.env
+.env*
 dist/
 build/
 *.zip

@@ -1,17 +1,15 @@
-import logging
 from abc import abstractmethod
+from typing import Generic, TypeVar
 
 import pygame
 
 from .screen import ScreenSettings
 from .sprites import GameSprite
 
-logger = logging.getLogger(__name__)
-
 
 class Game:
     """Game class defines high-level game logic. This class includes a run method, which controls the game loop.
-    User is required to implement abstract methods self._update() and self._events(), which is invoked within self.run()
+    User is required to implement abstract methods self.update() and self.events(), which is invoked within self.run()
     """
 
     def __init__(self, screen_settings: ScreenSettings | None = None):
@@ -29,10 +27,9 @@ class Game:
         """Runs and maintains the game loop and clock. Updates the screen and invokes any handlers
         Invokes pygame.quit() when pygame.QUIT event is reached
         """
-        logger.debug("starting game...")
         self.running = True
         while self.running:
-            self._update()
+            self.update()
             if self.screen_settings is not None:
                 self.screen_settings.update_screen()
                 self.dt = self.screen_settings.get_delta_time()
@@ -40,11 +37,11 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
-                self._events(event)
+                self.events(event)
 
         pygame.quit()
 
-    def _events(self, event: pygame.event.Event, *args, **kwargs):
+    def events(self, event: pygame.event.Event, *args, **kwargs):
         """Define custom event handlers.  Optional.  Called once per game loop
 
         Args:
@@ -54,7 +51,7 @@ class Game:
         pass
 
     @abstractmethod
-    def _update(self):
+    def update(self, *args, **kwargs):
         """Required implentation of game logic. Called once per game loop.
 
         Raises:
@@ -67,11 +64,11 @@ class SpriteGame(Game):
     def __init__(
         self,
         screen_settings: ScreenSettings,
-        player_sprite: GameSprite | None = None,
+        player_sprite: GameSprite,
         *other_sprites: GameSprite,
     ):
         """Create new instance of SpriteGame object.  Invokes pygame.init().  Must
-        implement _update_sprites()
+        implement update_sprites()
 
         Args:
             settings (ScreenSettings): Information needed to update the screen
@@ -79,14 +76,11 @@ class SpriteGame(Game):
             *other_sprites (GameSprite): Any other sprites needed for the game
         """
         super().__init__(screen_settings=screen_settings)
-        self.player_sprite = player_sprite
-        self.other_sprites = other_sprites
-        self.other_sprites_group = pygame.sprite.Group()
-        for sprite in other_sprites:
-            self.other_sprites_group.add(sprite)
+        self.player_sprite: GameSprite = player_sprite
+        self.other_sprites_group = pygame.sprite.Group(other_sprites)
 
     @abstractmethod
-    def _update_sprites(self):
+    def update_sprites(self):
         """Defines behavior for all GameSprite objects over time.  Called once per game loop
 
         Args:
