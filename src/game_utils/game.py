@@ -13,20 +13,20 @@ class Game:
     """
 
     def __init__(self, screen_settings: ScreenSettings | None = None):
-        """Invokes pygame.init(), configures clock and screen settings
+        """High level game orchestrations
 
         Args:
             screen_settings (ScreenSettings): Any screen settings
         """
-        pygame.init()
         self.dt = 0
         self.running = False
         self.screen_settings = screen_settings
 
     def run(self):
         """Runs and maintains the game loop and clock. Updates the screen and invokes any handlers
-        Invokes pygame.quit() when pygame.QUIT event is reached
+        Invokes pygame.init(), pygame.quit() when pygame.QUIT event is reached
         """
+        pygame.init()
         self.running = True
         while self.running:
             self.update()
