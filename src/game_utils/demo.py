@@ -14,7 +14,16 @@ from game_utils.sprites import PhysicsSprite, PlayerSprite
 from game_utils.vector_utils import apply_vector_actions, get_random_vector
 
 
-class BouncyBallPlayer(PlayerSprite):
+class BouncyBallSprite:
+    def __init__(self):
+        self.collided = False
+
+
+class BouncyBallPlayer(PlayerSprite, BouncyBallSprite):
+    """A PlayerSprite is a subclass of PhysicsSprite.  It features
+    a PhysicsBody and also a Controller reference.  Here you define logic
+    for what the controller actions do to the player sprite over time"""
+
     def __init__(
         self,
         image: Surface,
@@ -26,7 +35,6 @@ class BouncyBallPlayer(PlayerSprite):
         id: int = 0,
     ):
         super().__init__(image, position, controller, physics_body, boundaries, id)
-        self.collided = False
         self.color = color
 
     def update(self, *args, **kwargs):
@@ -36,7 +44,7 @@ class BouncyBallPlayer(PlayerSprite):
         accel = self.controller.direction()
         self.physics_body.force(accel, dt)
 
-        # bound positions
+        # bound position with physics body
         self._update_pos(
             self.physics_body.position,
             xbounds=self._bounds_x,
@@ -63,7 +71,11 @@ class BouncyBallPlayer(PlayerSprite):
         self.physics_body.force(force, dt)
 
 
-class BouncyBallPuck(PhysicsSprite):
+class BouncyBallPuck(PhysicsSprite, BouncyBallSprite):
+    """This bit probably looks complicated, and it is :)
+    PhysicsSprite is subclass of GameSprite that features a PhysicsBody.
+    Here we define the logic for what the sprite will do over time"""
+
     def __init__(
         self,
         image: Surface,
@@ -77,7 +89,6 @@ class BouncyBallPuck(PhysicsSprite):
         super().__init__(image, position, physics_body, boundaries, id)
         self.color = color
         self.speed = speed
-        self.collided = False
         self.physics_body.velociy = get_random_vector(speed)
         self.start_position = Vector2.copy(position)
 
@@ -116,6 +127,8 @@ class BouncyBallPuck(PhysicsSprite):
 
 
 class BouncyBallSettings(ScreenSettings):
+    """Anything to do with screen activity"""
+
     def __init__(
         self,
         player: BouncyBallPlayer,
@@ -163,6 +176,11 @@ class BouncyBallSettings(ScreenSettings):
 
 
 class BouncyBall(SpriteGame):
+    """This is where high-level game logic goes
+    Think of this as the game-loop layer of the
+    application
+    """
+
     def __init__(
         self,
         settings: ScreenSettings,
@@ -173,8 +191,13 @@ class BouncyBall(SpriteGame):
         super().__init__(settings, player_sprite, *other_sprites)
         display.set_caption("Game Utils Demo Game")
         self.puck: BouncyBallPuck = self.other_sprites_group.sprites()[0]
+        # override type in superclass - I wish Python were better about this
+        self.player_sprite: BouncyBallPlayer = player_sprite
 
     def update(self):
+        """This method is required in a Game implementation.
+        Here is where the game loop logic will go.  This will
+        be called once per game loop"""
         self.update_sprites()
 
     def __update_player(self):
@@ -190,8 +213,6 @@ class BouncyBall(SpriteGame):
         self.__update_collisions()
 
     def __update_collisions(self):
-        assert isinstance(self.player_sprite, BouncyBallPlayer)
-
         if sprite.collide_circle(self.player_sprite, self.puck):
             if not self.player_sprite.collided:
                 self.player_sprite.physics_body.on_collide(self.puck.physics_body)
@@ -202,72 +223,73 @@ class BouncyBall(SpriteGame):
 
 
 if __name__ == "__main__":
-    import json
-    import os
 
-    path = os.path.dirname(os.path.relpath(__file__))
-    with open(
-        os.path.join(path, ".config", "demo.json"),
-        mode="r",
-        encoding="utf-8",
-    ) as input_file:
-        # load config file as a dictionary
-        input_params = json.load(input_file)
+    """configurations kept in a separate file
+    can make it easy to change things at this
+    orchestration level.
+    Play around with these input paramters and see what you can get it to do!"""
+    input_params = {
+        "player": {
+            "color": "darkred",
+            "physics_body": {"mass": 4, "friction": 0.002, "elasticity": 0},
+        },
+        "puck": {
+            "color": "midnightblue",
+            "physics_body": {"mass": 0.5, "friction": 0, "elasticity": 0},
+        },
+        "controller": {"speed": 1500.0},
+        "table": {"color": "firebrick"},
+        "mode": "DEBUG",
+        "screen": {"width": 1280},
+    }
 
-        # properties
-        screen_data = input_params["screen"]
-        controller_data = input_params["controller"]
-        player_data = input_params["player"]
-        puck_data = input_params["puck"]
-        table_data = input_params["table"]
+    # properties
+    table_color = input_params["table"]["color"]
+    ctrl_speed = input_params["controller"]["speed"]
+    player_physics = input_params["player"]["physics_body"]
+    player_color = input_params["player"]["color"]
+    puck_physics = input_params["puck"]["physics_body"]
+    puck_color = input_params["puck"]["color"]
+    screen_w = input_params["screen"]["width"]
+    screen_h = screen_w / 16 * 9  # screen["height"]
+    puck_size = screen_h / 9 / 2
 
-        # set configurations
-        table_color = table_data["color"]
-        ctrl_speed = controller_data["speed"]
-        player_physics = player_data["physics_body"]
-        player_color = player_data["color"]
-        puck_physics = puck_data["physics_body"]
-        puck_color = puck_data["color"]
-        screen_w = screen_data["width"]
-        screen_h = screen_w / 16 * 9  # screen["height"]
-        puck_size = screen_h / 9 / 2
+    # configure sprites
+    player = BouncyBallPlayer(
+        image=Surface((puck_size, puck_size)),
+        position=Vector2(screen_w / 2, screen_h / 2),
+        controller=DefaultKeyboardController(
+            float(ctrl_speed), *DEFAULT_KEYBOARD_ACTIONS
+        ),
+        physics_body=PhysicsBody(
+            mass=player_physics["mass"],
+            friction=player_physics["friction"],
+            elasticity=player_physics["elasticity"],
+        ),
+        boundaries=Rect(screen_w, 0, screen_h, 0),
+        color=player_color,
+    )
 
-        # configure sprites
-        player = BouncyBallPlayer(
-            image=Surface((puck_size, puck_size)),
-            position=Vector2(screen_w / 2, screen_h / 2),
-            controller=DefaultKeyboardController(
-                float(ctrl_speed), *DEFAULT_KEYBOARD_ACTIONS
-            ),
-            physics_body=PhysicsBody(
-                mass=player_physics["mass"],
-                friction=player_physics["friction"],
-                elasticity=player_physics["elasticity"],
-            ),
-            boundaries=Rect(screen_w, 0, screen_h, 0),
-            color=player_color,
-        )
+    puck = BouncyBallPuck(
+        image=Surface((puck_size, puck_size)),
+        position=Vector2(screen_w / 4, screen_h / 4),
+        boundaries=Rect(screen_w, 0, screen_h, 0),
+        physics_body=PhysicsBody(
+            mass=puck_physics["mass"],
+            friction=puck_physics["friction"],
+            elasticity=puck_physics["elasticity"],
+        ),
+        color=puck_color,
+    )
 
-        puck = BouncyBallPuck(
-            image=Surface((puck_size, puck_size)),
-            position=Vector2(screen_w / 4, screen_h / 4),
-            boundaries=Rect(screen_w, 0, screen_h, 0),
-            physics_body=PhysicsBody(
-                mass=puck_physics["mass"],
-                friction=puck_physics["friction"],
-                elasticity=puck_physics["elasticity"],
-            ),
-            color=puck_color,
-        )
+    # screen settings and configurations
+    settings = BouncyBallSettings(
+        player, puck, width=screen_w, height=screen_h, bg_color=table_color
+    )
 
-        # screen settings and configurations
-        settings = BouncyBallSettings(
-            player, puck, width=screen_w, height=screen_h, bg_color=table_color
-        )
+    # load sprites and configurations
+    game = BouncyBall(settings, player, puck)
 
-        # load sprites and configurations
-        game = BouncyBall(settings, player, puck)
-
-        print("Starting game...")
-        game.run()
-        print("Game quit")
+    print("Starting game...")
+    game.run()
+    print("Game quit")
