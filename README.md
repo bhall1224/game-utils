@@ -1,10 +1,12 @@
 # Game Utils
 
->1.1.3
+>1.1.3.1
 
 ## `game-utils` is a pygame engine.  The engine includes modules to facilitate boilerplate game operations. 
 
 ### Requirements
+
+>Now requires Python <=3.12 ONLY
 
 **Dependences:**
 - pygame
