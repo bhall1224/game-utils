@@ -1,0 +1,1 @@
+from game import main, update, NEXT_UPDATE_EVENT
