@@ -1,89 +1,41 @@
-from abc import abstractmethod
-from typing import Generic, TypeVar
-
 import pygame
+from pygame.time import Clock
+from abc import Callable
 
-from ..screen import ScreenSettings
-from ..sprites import GameSprite
+NEXT_UPDATE_EVENT = pygame.USEREVENT
 
+__update_func_list: list[Callable[[float], None]] = []
+__screen_update_func: Callable[[float], None] | None = None
 
-class Game:
-    """Game class defines high-level game logic. This class includes a run method, which controls the game loop.
-    User is required to implement abstract methods self.update() and self.events(), which is invoked within self.run()
-    """
+__current_update_scene: int = 0
+__frames_per_second = 60
+__time_units = 1000
 
-    def __init__(self, screen_settings: ScreenSettings | None = None):
-        """High level game orchestrations
+def main(event_handler_func: Callable[[pygame.event.Event], None]):
+    if len(__update_func_list) == 0:
+        raise NotImplementedError("need at least one update callback")
+    clock = Clock()
+    running = True
+    dt = 0.0
+    pygame.init()
 
-        Args:
-            screen_settings (ScreenSettings): Any screen settings
-        """
-        self.dt = 0
-        self.running = False
-        self.screen_settings = screen_settings
+    while running:
+        dt = clock.tick(__frames_per_second) / __time_units
+        
+        if __screen_update_func is not None:
+            __screen_update_func(dt)
+        
+        __update_func_list[__current_update_scene](dt)
 
-    def run(self):
-        """Runs and maintains the game loop and clock. Updates the screen and invokes any handlers
-        Invokes pygame.init(), pygame.quit() when pygame.QUIT event is reached
-        """
-        pygame.init()
-        self.running = True
-        while self.running:
-            self.update()
-            if self.screen_settings is not None:
-                self.screen_settings.update_screen()
-                self.dt = self.screen_settings.get_delta_time()
-                pygame.display.flip()
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-                self.events(event)
-
-        pygame.quit()
-
-    def events(self, event: pygame.event.Event, *args, **kwargs):
-        """Define custom event handlers.  Optional.  Called once per game loop
-
-        Args:
-            event (pygame.event.Event): The event passed from run() method
-            *args/**kwargs
-        """
-        pass
-
-    @abstractmethod
-    def update(self, *args, **kwargs):
-        """Required implentation of game logic. Called once per game loop.
-
-        Raises:
-            NotImplementedError: Required implementation
-        """
-        raise NotImplementedError()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == NEXT_UPDATE_EVENT:
+                __current_update_scene += 1
+                if __current_update_scene >= len(__update_func_list):
+                    raise IndexError("too many scene update events...")
+            else:
+                event_handler_func(event)
 
 
-class SpriteGame(Game):
-    def __init__(
-        self,
-        screen_settings: ScreenSettings,
-        player_sprite: GameSprite,
-        *other_sprites: GameSprite,
-    ):
-        """Create new instance of SpriteGame object.  Invokes pygame.init().  Must
-        implement update_sprites()
 
-        Args:
-            settings (ScreenSettings): Information needed to update the screen
-            player_sprite (GameSprite): The sprite to be used for the player
-            *other_sprites (GameSprite): Any other sprites needed for the game
-        """
-        super().__init__(screen_settings=screen_settings)
-        self.player_sprite: GameSprite = player_sprite
-        self.other_sprites_group = pygame.sprite.Group(other_sprites)
-
-    @abstractmethod
-    def update_sprites(self):
-        """Defines behavior for all GameSprite objects over time.  Called once per game loop
-
-        Args:
-            dt (float): change in time
-        """
-        raise NotImplementedError
