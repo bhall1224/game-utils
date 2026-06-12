@@ -3,8 +3,8 @@ from typing import Generic, TypeVar
 
 import pygame
 
-from .screen import ScreenSettings
-from .sprites import GameSprite
+from ..screen import ScreenSettings
+from ..sprites import GameSprite
 
 
 class Game:

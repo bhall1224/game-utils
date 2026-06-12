@@ -5,7 +5,7 @@ from typing import Any
 from pygame import Rect, Surface, Vector2
 from pygame.sprite import Sprite
 
-from .controller import Controller
+from .controller.controller import Controller
 from .physics import PhysicsBody
 
 
