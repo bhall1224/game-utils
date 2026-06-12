@@ -3,7 +3,7 @@ import logging
 import pygame.event
 from pygame.locals import K_ESCAPE, QUIT, USEREVENT
 
-from game_utils.game import Game
+from game_utils.game.game import Game
 from game_utils.screen import ScreenSettings
 
 logger = logging.getLogger(__name__)

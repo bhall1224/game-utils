@@ -1,6 +1,6 @@
 from pygame import Vector2
 
-from game_utils.controller import *
+from game_utils.controller.controller import *
 
 VALUES = [0.1, 2.2, 4.7]
 DIRECTIONS = [

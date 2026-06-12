@@ -6,12 +6,12 @@ import pygame.event
 import pygame.sprite as sprite
 from pygame import Rect, Surface, Vector2
 
-from game_utils.controller import DEFAULT_KEYBOARD_ACTIONS, DefaultKeyboardController
-from game_utils.game import SpriteGame
+from game_utils.controller.controller import DEFAULT_KEYBOARD_ACTIONS, DefaultKeyboardController
+from game_utils.game.game import SpriteGame
 from game_utils.physics import PhysicsBody
 from game_utils.screen import ScreenSettings
 from game_utils.sprites import PhysicsSprite, PlayerSprite
-from game_utils.vector_utils import apply_vector_actions, get_random_vector
+from game_utils.vector_utils.vector_utils import apply_vector_actions, get_random_vector
 
 
 class BouncyBallSprite:
