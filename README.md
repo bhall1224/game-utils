@@ -10,7 +10,6 @@
 
 **Dependences:**
 - pygame
-- numpy
 
 **Demo Game**
 

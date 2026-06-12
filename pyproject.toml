@@ -14,19 +14,12 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "altgraph==0.17.5",
-    "Cython==3.2.5",
-    "numpy==2.4.6",
-    "packaging==26.2",
-    "pygame==2.6.1",
-    "pyinstaller==6.20.0",
-    "pyinstaller-hooks-contrib==2026.6",
-    "setuptools==82.0.1",
+    "pygame==2.6.1"
 ]
 
 [project.urls]
 "Homepage" = "https://github.com/bhall1224/game-utils"
 
 [build-system]
-requires = ["scikit-build-core", "Cython"]
-build-backend = "scikit_build_core.build"
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
