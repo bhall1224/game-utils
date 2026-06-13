@@ -1,4 +1,4 @@
-from abc import abstractmethod
+# from abc import abstractmethod
 
 import pygame.display as display
 from pygame import FULLSCREEN, Color, Surface
@@ -37,11 +37,3 @@ class ScreenSettings:
         self.width = width
         self.height = height
         self.screen = display.set_mode((self.width, self.height))
-
-    def get_delta_time(self, units: int = 1000) -> float:
-        return self.clock.tick(self.frames_per_second) / units
-
-    @abstractmethod
-    def update_screen(self):
-        """Define logic for screen activity.  Required"""
-        raise NotImplementedError()
