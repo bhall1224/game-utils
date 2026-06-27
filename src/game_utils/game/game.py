@@ -1,6 +1,5 @@
 
-from collections.abc import Callable 
-from typing import Any, Concatenate
+from typing import Any
 
 import pygame
 
@@ -13,9 +12,6 @@ pygame.init()
 ##########################################################################################################
 
 GameError = Exception
-__FunctionType = Callable[Concatenate[float, ...], float]
-__HandlerType = Callable[Concatenate[Any, ...], bool]
-
 
 # CONSTANTS
 ##########################################################################################################
@@ -23,15 +19,13 @@ __HandlerType = Callable[Concatenate[Any, ...], bool]
 NEXT_UPDATE_EVENT = pygame.USEREVENT
 NEXT_UPDATE_EVENT_ID = "next_scene_id"
 
-__EVENT_HANDLER = "++event++"
+__CONFIG = "++config++"
 __SCREEN_HANDLER = "++screen++"
-
-
 # GLOBAL SETTINGS
 ##########################################################################################################
 
-__function_mapping: dict[str, __FunctionType] = {}
-__handler_mapping: dict[str, __HandlerType] = {}
+__scene_mapping: dict[str, Any] = {}
+__handler_mapping: dict[str, Any] = {}
 
 # ANNOTATION METHODS
 ##########################################################################################################
@@ -51,54 +45,46 @@ def run(start_scene: str | None = None):
     """
 
     # annotated function returns config data or None
-    def main(setup_func):
-        try:
-            config = setup_func() or {}
-            running = True
-            dt = 0.0
+    def main(event_handler_func):
+        running = True
+        dt = 0.0
 
-            screen_update_func = __handler_mapping.get(__SCREEN_HANDLER)
-            event_handler_func = __handler_mapping[__EVENT_HANDLER]
+        # get optional screen update function
+        screen_update_func = __handler_mapping.get(__SCREEN_HANDLER)   
+        
+        # get optional config function
+        config = __handler_mapping.get(__CONFIG, lambda: {})()
+
+        # first scene is either the scene given or the first one in the mapping
+        curr_scene = start_scene or list(__scene_mapping.keys())[0]
+                    
+        while running:
+            try:
+                scene_fn = __scene_mapping[curr_scene]
+            except KeyError:
+                raise GameError(f"scene not found! event: {event}")
             
-            if start_scene is None:
-                curr_scene = 0
-                scenes = get_scenes_as_list()
-            else:
-                curr_scene = start_scene
-                scenes = __function_mapping
-            
-            while running:                
+            data_packet = scene_fn(dt, **config)               
 
-                try:
-                    screen_packet = scenes[curr_scene](dt, **config)
-                except:
-                    raise GameError("the game failed suddenly!")
+            if screen_update_func is not None:
+                dt = screen_update_func(data_packet, **config)
 
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        running = False
-                    elif event.type == NEXT_UPDATE_EVENT:
-                        next_scene_name = event.dict.get(NEXT_UPDATE_EVENT_ID)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == NEXT_UPDATE_EVENT:
+                    try:
+                        curr_scene = event.dict[NEXT_UPDATE_EVENT_ID]
+                    except KeyError:
+                        raise GameError(f"next scene not given! event: {event}")
+                else:
+                    running = event_handler_func(event, data_packet, **config)
 
-                        # if an ID is given, call the map
-                        # otherwise we're working with a list
-                        if next_scene_name is not None:
-                            curr_scene = get_scene_by_name(next_scene_name)
-                        else:
-                            curr_scene += 1 
-                    else:
-                        running = event_handler_func(event, **config)                
-
-                if screen_update_func is not None and not screen_update_func(screen_packet, **config):
-                    raise GameError("screen activity error!")
-
-            return setup_func
-        except:
-            raise GameError("The game failed suddenly!")
+        return event_handler_func
         
     return main
 
-def scene(name=None) -> __FunctionType:
+def scene(name=None):
     """Decorate a method to register it as a scene.  A scene is basically an update
     function that will be called once per game loop.  You may register as many as you wish.
     These are inteded for game logic that relies on the change in time, and serve as an entry
@@ -111,22 +97,22 @@ def scene(name=None) -> __FunctionType:
 
     # inner method simply registers the function in the map
     def add_scene(fn):
-        return __add_function(fn, name)
+        return __add_scene(fn, name)
 
     return add_scene
 
-def event_handler(fn: __HandlerType) -> __HandlerType:
-    """Register an event handler function by annotating a Python method with this annotation.
+def config(fn):
+    """Register a handler function for returning configurations by annotating a Python method with this annotation.
 
     Args:
-        fn ((event, **config) -> bool): The annotated method
+        fn (() -> Any): The annotated method
 
     Returns:
         (float, **config) -> float: A special callback function for handling events
     """
-    return __add_handler(fn, __EVENT_HANDLER)
+    return __add_handler(fn, __CONFIG)
 
-def screen_handler(fn: __HandlerType) -> __FunctionType:
+def screen_handler(fn):
     """Register a method for any screen handling logic
     (optional)
 
@@ -165,23 +151,17 @@ def tag(*args, **kwargs):
 ##########################################################################################################
 
 def get_by_tag(tag):
-    return [fn for fn in __function_mapping if tag in getattr(fn, "tags", [])]
-
-def get_scene_by_name(name):
-    return __function_mapping.get(name)
-
-def get_scenes_as_list():
-    return list(__function_mapping.values())
+    return [fn for fn in __scene_mapping if tag in getattr(fn, "tags", [])]
     
 
 # HELPER METHODS
 ##########################################################################################################
 
-def __add_function(fn, name=None) -> __FunctionType:
-    fn_name = name or chr(len(__function_mapping))
-    __function_mapping[fn_name] = fn
+def __add_scene(fn, name):
+    fn_name = name or str(len(__scene_mapping.items()))
+    __scene_mapping[fn_name] = fn
     return fn
 
-def __add_handler(fn, name) -> __HandlerType:
+def __add_handler(fn, name):
     __handler_mapping[name] = fn
     return fn

@@ -1,6 +1,6 @@
 [project]
 name = "game-utils"
-version = "1.1.3.1"
+version = "2.0.0.0"
 authors = [
     { name="Bee Hall", email="bhall1224@gmail.com" },
 ]
@@ -10,7 +10,6 @@ requires-python = ">=3.12,<=3.13"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: C",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 dependencies = [
@@ -20,6 +19,11 @@ dependencies = [
 [project.urls]
 "Homepage" = "https://github.com/bhall1224/game-utils"
 
+[tool.setuptools]
+ext-modules = [
+    {name="game_utils.clock", sources=["src/game_utils/clock/clock.pyx"]}
+]
+
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools", "cython"]
 build-backend = "setuptools.build_meta"

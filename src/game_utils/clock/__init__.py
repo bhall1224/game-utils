@@ -1,0 +1,1 @@
+from .clock import get_delta_time
