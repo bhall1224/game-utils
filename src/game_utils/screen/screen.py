@@ -1,39 +1,47 @@
-# from abc import abstractmethod
+from collections.abc import Callable
 
 import pygame.display as display
 from pygame import FULLSCREEN, Color, Surface
-from pygame.time import Clock
 
 ColorType = str | tuple[int, int, int] | Color
 
-
 class ScreenSettings:
-    """defines information needed to udpate the screen"""
-
-    def __init__(
+    def __init__ (
         self,
-        *,
         width: float = 0.0,
         height: float = 0.0,
-        frames_per_second: int = 60,
         bg_color: ColorType | None = None,
         bg_image: Surface | None = None,
     ):
-        self.clock = Clock()
-        self.bg_image = bg_image
-        self.bg_color = bg_color
-        self.frames_per_second = frames_per_second
-        self.width = width
-        self.height = height
-        if self.width == 0.0 and self.height == 0.0:
-            self.screen = display.set_mode((0, 0), FULLSCREEN)
-            self.width = self.screen.get_width()
-            self.height = self.screen.get_height()
+        if width == 0.0 and height == 0.0:
+            self.screen_surface = display.set_mode((0, 0), FULLSCREEN)
+            self.width = self.screen_surface.get_width()
+            self.height = self.screen_surface.get_height()
         else:
-            self.screen = display.set_mode((self.width, self.height))
+            self.screen_surface = display.set_mode((width, height))
+            self.width = width
+            self.height = height
+        
+        self.bg_color = bg_color
+        self.bg_image = bg_image
+        
+__SETTINGS_MAPPING: dict[str, Callable[[], ScreenSettings]] = {}
 
-    def resize_screen(self, width: float, height: float):
-        """resizes to fullscreen by default"""
-        self.width = width
-        self.height = height
-        self.screen = display.set_mode((self.width, self.height))
+def screen_settings(name):
+    def __inner(fn):
+        __SETTINGS_MAPPING[name] = fn
+        return fn
+    return __inner
+
+def screen_update(name):
+    def __inner(fn):
+        def __inner_callback(data, **config):
+            settings = __SETTINGS_MAPPING[name]()
+            if settings.bg_color is not None:
+                settings.screen_surface.fill(settings.bg_color)
+            elif settings.bg_image is not None:
+                settings.screen_surface.blit(settings.bg_image, (settings.width, settings.height))
+            display.flip()
+            return fn(data, settings, **config)
+        return __inner_callback        
+    return __inner
