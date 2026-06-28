@@ -62,7 +62,7 @@ def run(start_scene: str | None = None):
             try:
                 scene_fn = __scene_mapping[curr_scene]
             except KeyError:
-                raise GameError(f"scene not found! event: {event}")
+                raise GameError(f"scene not found! scene: {curr_scene}")
             
             data_packet = scene_fn(dt, **config)               
 
