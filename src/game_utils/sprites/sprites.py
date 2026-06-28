@@ -1,13 +1,10 @@
-from abc import abstractmethod
-from collections.abc import Callable
 from typing import Any
 
 from pygame import Rect, Surface, Vector2
 from pygame.sprite import Sprite
 
-from .controller.controller import Controller
-from .physics import PhysicsBody
-
+__PLAYER = "player"
+__SPRITES = {}
 
 class GameSprite(Sprite):
     def __init__(
@@ -32,69 +29,6 @@ class GameSprite(Sprite):
         self.boundaries = boundaries
         self.id = id
 
-    @abstractmethod
-    def update(self, *args: Any, **kwargs: Any):
-        """Required.  Define logic to perform on this sprite once for every game loop
-
-        Args:
-            *args, **kwargs
-        """
-        raise NotImplementedError()
-
-    def _update_pos(
-        self,
-        position: Vector2 | None = None,
-        xbounds: Callable[[], None] | None = None,
-        ybounds: Callable[[], None] | None = None,
-    ):
-        """Updates position of this sprite. Maintains any given boundaries. Invokes callbacks given when boundaries are reached
-
-        Args:
-            position (Vector2 | None, optional): The new position of this sprite. Defaults to None.
-            xbounds (Callable[[], None] | None, optional): X boundary callable. Invoked when boundaries are reached, if given. Defaults to None.
-            ybounds (Callable[[], None] | None, optional): Y boundary callable. Invoked when boundaries are reached, if given. Defaults to None.
-        """
-        if position is not None:
-            self.position = position
-
-        x, y, w, h = self.rect
-
-        if self.boundaries is not None:
-            bx_max, bx_min, by_max, by_min = self.boundaries
-
-            if self.position.y > by_max - h / 2:
-                if ybounds is not None:
-                    ybounds()
-
-                self.position.y = by_max - h / 2
-
-            elif self.position.y < by_min + h / 2:
-                if ybounds is not None:
-                    ybounds()
-
-                self.position.y = by_min + h / 2
-
-            if self.position.x > bx_max - w / 2:
-                if xbounds is not None:
-                    xbounds()
-
-                self.position.x = bx_max - w / 2
-
-            elif self.position.x < bx_min + w / 2:
-                if xbounds is not None:
-                    xbounds()
-
-                self.position.x = bx_min + w / 2
-
-        x = self.position.x - w / 2
-        y = self.position.y - h / 2
-
-        self.rect = Rect(x, y, w, h)
-
-    def __str__(self) -> str:
-        return str(tuple(self.rect))
-
-
 class PhysicsSprite(GameSprite):
     """GameSprite that uses a PhysicsBody reference to apply physics"""
 
@@ -102,7 +36,7 @@ class PhysicsSprite(GameSprite):
         self,
         image: Surface,
         position: Vector2,
-        physics_body: PhysicsBody,
+        physics_body: Any,
         boundaries: Rect | None = None,
         id: int = 0,
     ):
@@ -118,10 +52,31 @@ class PlayerSprite(PhysicsSprite):
         self,
         image: Surface,
         position: Vector2,
-        controller: Controller,
-        physics_body: PhysicsBody,
+        controller: Any,
+        physics_body: Any,
         boundaries: Rect | None = None,
         id: int = 0,
     ):
         super().__init__(image, position, physics_body, boundaries, id)
         self.controller = controller
+
+
+def sprite(name=None):
+    def __inner(fn):
+        sprite_name = name or str(len(__SPRITES.items()))
+        __SPRITES[sprite_name] = fn()
+        return fn
+    return __inner
+
+def sprites(fn):
+    __SPRITES.update(fn())
+    return fn
+
+def player_sprite(fn):
+    __SPRITES[__PLAYER] = fn()
+    return fn
+
+def update_sprites(fn):
+    def __inner(dt, **config):
+        return fn(dt, __SPRITES, **config)
+    return __inner
