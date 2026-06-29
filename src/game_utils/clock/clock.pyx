@@ -1,7 +1,8 @@
 from pygame.time import Clock
 
-FRAMERATE_DEFAULT = 60.0
-UNITS = 1000.0
+cdef const float FRAMERATE_DEFAULT = 60.0
+cdef const float UNITS = 1000.0
+
 __CLOCK = Clock()
 
 cdef float __get_dt_busy(float framerate, float units):
