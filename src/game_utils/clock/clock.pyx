@@ -4,10 +4,10 @@ FRAMERATE_DEFAULT = 60.0
 UNITS = 1000.0
 __CLOCK = Clock()
 
-def __get_dt_busy(framerate, units):
+cdef float __get_dt_busy(float framerate, float units):
     return __CLOCK.tick_busy_loop(framerate) / units
 
-def __get_dt(framerate, units):
+cdef float __get_dt(float framerate, float units):
     return __CLOCK.tick(framerate) / units
 
 def get_delta_time(framerate: float = FRAMERATE_DEFAULT, units: float = UNITS, busy_wait: bool = True) -> float:
