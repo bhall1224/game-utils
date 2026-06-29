@@ -32,7 +32,7 @@ __handler_mapping: dict[str, Any] = {}
 # ANNOTATION METHODS
 ##########################################################################################################
 
-def run(start_scene: str | None = None):
+def run(*scenes):
     """Main entry point for the game.  Annotate a method that sets the game configurations, and the game
     will start when you run the script with the Python interpreter.  No __name__ == "__main__" required.
 
@@ -50,6 +50,7 @@ def run(start_scene: str | None = None):
     def main(event_handler_func):
         cdef bool running = True
         cdef float dt = 0.0
+        cdef int i = 0
 
         # get optional screen update function
         screen_update_func = __handler_mapping.get(__SCREEN_HANDLER)   
@@ -58,7 +59,7 @@ def run(start_scene: str | None = None):
         config = __handler_mapping.get(__CONFIG, lambda: {})()
 
         # first scene is either the scene given or the first one in the mapping
-        curr_scene = start_scene or list(__scene_mapping.keys())[0]
+        curr_scene = __get_default_scene(scenes, i)
                     
         while running:
             try:
@@ -76,7 +77,11 @@ def run(start_scene: str | None = None):
                     running = False
                 elif event.type == NEXT_UPDATE_EVENT:
                     try:
-                        curr_scene = event.dict[NEXT_UPDATE_EVENT_ID]
+                        if event.dict.get(NEXT_UPDATE_EVENT_ID) is not None:
+                            curr_scene = event.dict[NEXT_UPDATE_EVENT_ID]
+                        else:
+                            i += 1
+                            curr_scene = __get_default_scene(scenes, i)
                     except KeyError:
                         raise GameError(f"next scene not given! event: {event}")
                 else:
@@ -160,21 +165,12 @@ def get_config(fn):
         config = __handler_mapping[__CONFIG]()
         return fn(*args, **config)
     return __inner
-
-
     
 
 # HELPER METHODS
 ##########################################################################################################
-# TODO: inject mock configuration?
-# class __MagicMap(UserDict):
-#     def __getitem__(self, key):
-#         return __handler_mapping.get(
-#             __CONFIG, lambda: self.copy()
-#         )().get(key, self.copy())
-    
-# def __map_handler():
-#     return __handler_mapping.get(__CONFIG, lambda: __MagicMap())()
+cdef __get_default_scene(scenes, i):
+    return list(__scene_mapping.keys())[i] if len(scenes) == 0 else scenes[i]
 
 cdef __add_scene(fn, name):
     fn_name = name or str(len(__scene_mapping.items()))
