@@ -6,7 +6,8 @@ import pygame
 # module relies heavily on pygame
 # initializing at module import insures
 # everything is ready
-pygame.init()
+if not pygame.get_init():
+    pygame.init()
 
 # TYPE ALIASES
 ##########################################################################################################
@@ -19,8 +20,9 @@ GameError = Exception
 NEXT_UPDATE_EVENT = pygame.USEREVENT
 NEXT_UPDATE_EVENT_ID = "next_scene_id"
 
-__CONFIG = "++config++"
-__SCREEN_HANDLER = "++screen++"
+cdef const char* __CONFIG = "++config++"
+cdef const char* __SCREEN_HANDLER = "++screen++"
+
 # GLOBAL SETTINGS
 ##########################################################################################################
 
@@ -46,8 +48,8 @@ def run(start_scene: str | None = None):
 
     # annotated function returns config data or None
     def main(event_handler_func):
-        running = True
-        dt = 0.0
+        cdef bool running = True
+        cdef float dt = 0.0
 
         # get optional screen update function
         screen_update_func = __handler_mapping.get(__SCREEN_HANDLER)   
@@ -152,16 +154,33 @@ def tag(*args, **kwargs):
 
 def get_by_tag(tag):
     return [fn for fn in __scene_mapping if tag in getattr(fn, "tags", [])]
+
+def get_config(fn):
+    def __inner(*args):
+        config = __handler_mapping[__CONFIG]()
+        return fn(*args, **config)
+    return __inner
+
+
     
 
 # HELPER METHODS
 ##########################################################################################################
+# TODO: inject mock configuration?
+# class __MagicMap(UserDict):
+#     def __getitem__(self, key):
+#         return __handler_mapping.get(
+#             __CONFIG, lambda: self.copy()
+#         )().get(key, self.copy())
+    
+# def __map_handler():
+#     return __handler_mapping.get(__CONFIG, lambda: __MagicMap())()
 
-def __add_scene(fn, name):
+cdef __add_scene(fn, name):
     fn_name = name or str(len(__scene_mapping.items()))
     __scene_mapping[fn_name] = fn
     return fn
 
-def __add_handler(fn, name):
+cdef __add_handler(fn, name):
     __handler_mapping[name] = fn
     return fn
