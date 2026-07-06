@@ -1,0 +1,36 @@
+#!/bin/bash
+
+function test-build () {
+    cythonize -i src/game_utils/$1/$1.pyx
+}
+
+function build () {
+    python -m pip install -e .
+}
+
+function build-wheel () {
+    rm -rf dist
+    python -m build .
+}
+
+function upload-wheel () {
+    python -m twine upload dist/*
+}
+
+function test () {
+    python -mpytest -v --disable-warnings
+}
+
+function install-project-dep () {
+    python -m pip install $1
+    python -m pip freeze | grep $1 >> requirements.txt
+}
+
+function install-build-dep () {
+    python -m pip install $1
+    python -m pip freeze > build-requirements.txt
+}
+
+function demo-game() {
+    python -m game_utils.demo
+}

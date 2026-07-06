@@ -24,7 +24,7 @@ dependencies = [
 ext-modules = [
     {name="game_utils.game.game", sources=["src/game_utils/game/game.pyx"]},
     {name="game_utils.clock.clock", sources=["src/game_utils/clock/clock.pyx"]},
-    {name="game_utils.screen.screen", sources=["src/game_utils/screen/screen.pyx"]},
+    {name="game_utils.physics.physics", sources=["src/game_utils/physics/physics.pyx"]},
 ]
 
 [build-system]

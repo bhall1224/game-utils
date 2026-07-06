@@ -10,3 +10,4 @@ build/
 .pytest*
 **/*.so
 **/*.c
+!**/lib/*.c

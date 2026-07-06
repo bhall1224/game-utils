@@ -7,6 +7,14 @@ PLAYER = "player"
 __SPRITES = {}
 
 class GameSprite(Sprite):
+    """_summary_
+
+    Args:
+        id (int): unique id for the sprite.  can be ordinal
+        image (pygame.Surface): Surface on which to draw the sprite
+        position (pygame.Vector2): Position on screen to draw the sprite
+        boundaries (pygame.Rect | None): Optional boundaries in which to keep the sprite.  Defaults to None
+    """
     def __init__(
         self,
         image: Surface,
@@ -30,7 +38,7 @@ class GameSprite(Sprite):
         self.id = id
 
 class PhysicsSprite(GameSprite):
-    """GameSprite that uses a PhysicsBody reference to apply physics"""
+    """GameSprite that uses a PhysicsBody reference with which to apply physics"""
 
     def __init__(
         self,
@@ -62,8 +70,9 @@ class PlayerSprite(PhysicsSprite):
 
 def sprite(name=None):
     def __inner(fn):
-        sprite_name = name or str(len(__SPRITES.items()))
-        __SPRITES[sprite_name] = fn()
+        sprite: GameSprite = fn()
+        sprite_name: str = name or fn.__name__
+        __SPRITES[sprite_name] = sprite
         return fn
     return __inner
 
@@ -73,8 +82,7 @@ def sprite_group(fn):
 
 def player_sprite(name=None):
     def __inner(fn):
-        __SPRITES[name or PLAYER] = fn()
-        return fn
+        return sprite(name)(fn)
     return __inner
 
 def update_sprites(fn):
