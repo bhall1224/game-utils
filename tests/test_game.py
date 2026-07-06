@@ -26,7 +26,7 @@ def update_scene(dt, **config):
             pygame.event.Event(game.NEXT_UPDATE_EVENT, {game.NEXT_UPDATE_EVENT_ID: START_SCENE})
         )
 
-    return {"age": 41}
+    return {"age": 42}
 
 def update_start_scene(dt, **config):
     asserts_config(config)
