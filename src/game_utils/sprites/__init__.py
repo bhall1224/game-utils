@@ -5,5 +5,5 @@ from .sprites import (
     sprite,
     sprite_group,
     player_sprite,
-    update_sprites
+    inject_sprites
 )

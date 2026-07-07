@@ -34,16 +34,16 @@ class ScreenSettings:
         
 __SETTINGS_MAPPING: dict[str, ScreenSettings] = {}
 
-def screen_settings(name):
+def screen_settings(name=None):
     def __inner(fn):
-        __SETTINGS_MAPPING[name] = fn()
+        __SETTINGS_MAPPING[name or fn.__name__] = fn()
         return fn
     return __inner
 
-def screen_update(name):
+def screen_update(name=None):
     def __inner(fn):
         def __inner_callback(data, **config):
-            settings = __SETTINGS_MAPPING[name]
+            settings = __SETTINGS_MAPPING[name or fn.__name__]
             if settings.bg_color is not None:
                 settings.screen_surface.fill(settings.bg_color)
             elif settings.bg_image is not None:
