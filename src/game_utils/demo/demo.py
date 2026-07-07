@@ -12,8 +12,19 @@ PLAYER = "striker"
 PUCK = "puck"
 
 
-@game.config
-def config(*_):
+def controller():
+    l, r, u, d, q, e = (
+        pygame.key.get_pressed()[k] for k in [pygame.K_a, pygame.K_d, pygame.K_w, pygame.K_s, pygame.K_q, pygame.K_ESCAPE]
+    )
+
+    if e or q:
+        pygame.event.post(pygame.event.Event(pygame.QUIT))
+
+    return pygame.Vector2((r - l), (d - u))
+
+
+@game.config()
+def config():
     return {
         PLAYER: {
             "color": "darkred",
@@ -30,19 +41,8 @@ def config(*_):
     }
 
 
-def controller():
-    l, r, u, d, q, e = (
-        pygame.key.get_pressed()[k] for k in [pygame.K_a, pygame.K_d, pygame.K_w, pygame.K_s, pygame.K_q, pygame.K_ESCAPE]
-    )
-
-    if e or q:
-        pygame.event.post(pygame.event.Event(pygame.QUIT))
-
-    return pygame.Vector2((r - l), (d - u))
-
-
 @sprites.player_sprite(PLAYER)
-@game.get_config
+@game.inject_config()
 def player_sprite(**config):
     return sprites.PlayerSprite(
         image=pygame.Surface((PUCK_SIZE, PUCK_SIZE)),
@@ -54,7 +54,7 @@ def player_sprite(**config):
 
 
 @sprites.sprite(PUCK)
-@game.get_config
+@game.inject_config()
 def puck_sprite(**config):
     return sprites.PhysicsSprite(
         image=pygame.Surface((PUCK_SIZE, PUCK_SIZE)),
@@ -111,7 +111,7 @@ def screen_update(data, settings: screen.ScreenSettings, **config):
 
 
 @game.scene(SCENE)
-@sprites.update_sprites
+@sprites.inject_sprites
 def update(dt, sprites, **config):
     # Physics and controller stuff happens here
     data_packet = {

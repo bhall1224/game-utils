@@ -1,10 +1,11 @@
 from typing import Any
 
 from pygame import Rect, Surface, Vector2
-from pygame.sprite import Sprite
+from pygame.sprite import Sprite, Group
 
 PLAYER = "player"
 __SPRITES = {}
+__SPRITE_GROUPS = {}
 
 class GameSprite(Sprite):
     """_summary_
@@ -20,7 +21,6 @@ class GameSprite(Sprite):
         image: Surface,
         position: Vector2,
         boundaries: Rect | None = None,
-        id: int = 0,
     ):
         """Implement a Game Sprite object. Subclass must implement GameSprite.update
 
@@ -35,7 +35,6 @@ class GameSprite(Sprite):
         self.rect = Rect(position.x, position.y, *dimensions)
         self.position = position
         self.boundaries = boundaries
-        self.id = id
 
 class PhysicsSprite(GameSprite):
     """GameSprite that uses a PhysicsBody reference with which to apply physics"""
@@ -46,9 +45,8 @@ class PhysicsSprite(GameSprite):
         position: Vector2,
         physics_body: Any,
         boundaries: Rect | None = None,
-        id: int = 0,
     ):
-        super().__init__(image, position, boundaries, id)
+        super().__init__(image, position, boundaries)
         self.physics_body = physics_body
 
 
@@ -62,30 +60,40 @@ class PlayerSprite(PhysicsSprite):
         controller: Any,
         physics_body: Any,
         boundaries: Rect | None = None,
-        id: int = 0,
     ):
-        super().__init__(image, position, physics_body, boundaries, id)
+        super().__init__(image, position, physics_body, boundaries)
         self.controller = controller
 
 
 def sprite(name=None):
+    """Annotate a function that returns a GameSprite.  
+    If a name is provided, use that as the key; otherwise, the function's name is used.
+
+    Args:
+        name (str, optional): A unique name for the sprite. Defaults to None.
+    """
     def __inner(fn):
-        sprite: GameSprite = fn()
-        sprite_name: str = name or fn.__name__
-        __SPRITES[sprite_name] = sprite
+        # Store the sprite in the global __SPRITES dictionary
+        __SPRITES[
+            name or fn.__name__
+        ] = fn()
         return fn
     return __inner
 
-def sprite_group(fn):
-    __SPRITES.update(fn())
-    return fn
+def sprite_group(name=None):
+    def __inner(fn):
+        new_sprites = fn()
+        __SPRITE_GROUPS[name or fn.__name__] = Group(*new_sprites)
+        __SPRITES.update({new_sprites})
+        return fn
+    return __inner
 
 def player_sprite(name=None):
     def __inner(fn):
         return sprite(name)(fn)
     return __inner
 
-def update_sprites(fn):
+def inject_sprites(fn):
     def __inner(dt, **config):
         return fn(dt, __SPRITES, **config)
     return __inner
