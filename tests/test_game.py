@@ -18,14 +18,14 @@ class MockGame(Game):
         self.state = 0
         self.event = False
 
-    def _update(self):
+    def update(self):
         self.state += 1
         if self.state == 1:
             pygame.event.post(pygame.event.Event(TESTEVENT))
         if self.state == 3:
             self.running = False
 
-    def _events(self, event, *args, **kwargs):
+    def events(self, event, *args, **kwargs):
         if event.type == TESTEVENT:
             self.event = True
 

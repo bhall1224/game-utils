@@ -1,12 +1,11 @@
 from abc import abstractmethod
+from collections.abc import Callable
 from enum import Enum
 from typing import Any, Literal, TypedDict
 
-from pygame import K_ESCAPE, Vector2
-from pygame.joystick import Joystick, JoystickType
-from pygame.joystick import get_count as get_joystick_count
-from pygame.key import get_pressed as get_pressed_keys
-from pygame.locals import K_DOWN, K_LEFT, K_RIGHT, K_UP
+import pygame.joystick
+import pygame.key
+from pygame import K_DOWN, K_ESCAPE, K_LEFT, K_RIGHT, K_UP, Vector2
 
 
 class VectorAction(TypedDict):
@@ -31,7 +30,7 @@ class Controller:
 
     def __init__(
         self,
-        speed: float = 1.0,
+        speed: float,
         *args: VectorAction,
         **kwargs: VectorAction,
     ):
@@ -42,13 +41,10 @@ class Controller:
             *args (VectorAction): A list of action metadata for the controller
             **kwargs (VectorAction): A mapping of metadata for the controller
         """
-        self.speed = speed
+        self.speed: float = speed
 
-        self._actions: dict[str, VectorAction] = {}
-        for action in args:
-            id = action["action_name"]
-            self._actions[id] = action
-        self._actions.update(kwargs)
+        self.actions: dict[str, VectorAction] = {v["action_name"]: v for v in args}
+        self.actions.update(kwargs)
 
     @abstractmethod
     def direction(self) -> Vector2:
@@ -91,67 +87,6 @@ class Controller:
         raise NotImplementedError()
 
 
-class ControllerHandler:
-    """Helper class for getting controllers
-    Implement cls._new_controller_instance(joy, speed, *args, **kwargs) method
-    """
-
-    @classmethod
-    @abstractmethod
-    def _new_controller_instance(
-        cls,
-        joystick: JoystickType,
-        speed: float,
-        *args: VectorAction,
-        **kwargs: VectorAction,
-    ) -> Controller:
-        """Creates a new instance of Controller with given args
-
-        Args:
-            input (pygame.JoystickType): The pygame Joystick reference
-            speed (float): Scalar multiple applied to controller output
-            *args (VectorAction): A list of action metadata for the controller
-            **kwargs (VectorAction): A mapping of metadata for the controller
-
-        Raises:
-            NotImplementedError: Abstract method
-
-        Returns:
-            Controller: the new instance of Controller
-        """
-        raise NotImplementedError
-
-    @classmethod
-    def get_controllers(
-        cls,
-        players: int = 1,
-        speed: float = 1.0,
-    ) -> list[Controller]:
-        """Base implementation for getting all Joystick controllers for each player
-
-        Args:
-            players (int, optional): The number of players. Defaults to 1.
-            speed (float, optional): Scalar multiple applied to controller output. Defaults to 1.
-
-        Returns:
-            list[Controller]: A list of controllers for each player
-        """
-        controllers = []
-        for i in range(get_joystick_count()):
-            new_controller = cls._new_controller_instance(
-                joystick=Joystick(i),
-                speed=speed,
-            )
-            controllers.append(new_controller)
-
-        if len(controllers) < players:
-            print(
-                f"Not enough controllers for players! (Players: {players}, Controllers: {len(controllers)})"
-            )
-
-        return controllers
-
-
 class JoystickController(Controller):
     """Joystick base class.  Implements Controller class action(key) method.
     Abstract class that requires implementation for direction() method.
@@ -159,8 +94,8 @@ class JoystickController(Controller):
 
     def __init__(
         self,
-        input: JoystickType,
-        speed: float = 1,
+        input: pygame.joystick.JoystickType,
+        speed: float,
         *args: VectorAction,
         **kwargs: VectorAction,
     ):
@@ -172,7 +107,7 @@ class JoystickController(Controller):
             *args (VectorAction): A list of action metadata for the controller
             **kwargs (VectorAction): A mapping of metadata for the controller
         """
-        super().__init__(*args, speed=speed, **kwargs)
+        super().__init__(speed, *args, **kwargs)
         self.input = input
 
     def action(self, key: str) -> float:
@@ -184,7 +119,7 @@ class JoystickController(Controller):
         Returns:
             float: The result of the Vector Action
         """
-        vector_action = self._actions.get(key)
+        vector_action = self.actions.get(key)
 
         if vector_action is not None:
             id = vector_action["input_id"]
@@ -198,6 +133,19 @@ class JoystickController(Controller):
         else:
             return 0.0
 
+    @classmethod
+    def get_controllers(
+        cls,
+        joy: pygame.joystick.JoystickType,
+        speed: float,
+        *args: VectorAction,
+        **kwargs: VectorAction,
+    ):
+        return [
+            cls.__init__(joy, speed, *args, **kwargs)
+            for _ in pygame.joystick.get_count()
+        ]
+
 
 class KeyboardController(Controller):
     """Keyboard base class.  Implements Controller class action(key) method.
@@ -205,21 +153,12 @@ class KeyboardController(Controller):
     Adds get_keys() method that gets all keyboard keys pressed
     """
 
-    def get_keys(self) -> Any:
-        """Pygame keys tuple
-
-        Returns:
-            Any: The list of all keys currently pressed
-        """
-        return get_pressed_keys()
-
     def action(self, key: str) -> float:
-        vector_action = self._actions.get(key)
+        vector_action = self.actions.get(key)
 
         if vector_action is not None:
             id = vector_action["input_id"]
-            all_keys = self.get_keys()
-            if len(all_keys) > 0 and all_keys[id] is True:
+            if pygame.key.get_pressed()[id]:
                 return 1.0
 
         return 0.0
