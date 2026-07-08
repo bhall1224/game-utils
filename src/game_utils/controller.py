@@ -107,7 +107,7 @@ class JoystickController(Controller):
             *args (VectorAction): A list of action metadata for the controller
             **kwargs (VectorAction): A mapping of metadata for the controller
         """
-        super().__init__(speed, *args, **kwargs)
+        super(JoystickController, self).__init__(speed, *args, **kwargs)
         self.input = input
 
     def action(self, key: str) -> float:
@@ -133,17 +133,15 @@ class JoystickController(Controller):
         else:
             return 0.0
 
-    @classmethod
+    @staticmethod
     def get_controllers(
-        cls,
-        joy: pygame.joystick.JoystickType,
         speed: float,
         *args: VectorAction,
         **kwargs: VectorAction,
     ):
         return [
-            cls.__init__(joy, speed, *args, **kwargs)
-            for _ in pygame.joystick.get_count()
+            JoystickController(pygame.joystick.Joystick(i), speed, *args, **kwargs)
+            for i in range(pygame.joystick.get_count())
         ]
 
 

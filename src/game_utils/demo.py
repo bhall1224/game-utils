@@ -93,9 +93,6 @@ class BouncyBallPuck(PhysicsSprite, BouncyBallSprite):
         self.start_position = Vector2.copy(position)
 
     def update(self, *args, **kwargs):
-        reset = kwargs.get("reset")
-        if reset is not None:
-            self.reset(position=reset)
         collided = kwargs.get("collided")
         if collided is not None:
             self.collided = True
@@ -154,7 +151,7 @@ class BouncyBallSettings(ScreenSettings):
         # DRAW THE TABLE
         draw.rect(
             surface=self.screen,
-            color=self.bg_color,
+            color=self.bg_color or "black",
             rect=(0, 0, self.width, self.height),
             border_radius=15,
         )
@@ -223,73 +220,79 @@ class BouncyBall(SpriteGame):
 
 
 if __name__ == "__main__":
+    import os
+    import shutil
+    import sys
 
-    """configurations kept in a separate file
-    can make it easy to change things at this
-    orchestration level.
-    Play around with these input paramters and see what you can get it to do!"""
-    input_params = {
-        "player": {
-            "color": "darkred",
-            "physics_body": {"mass": 4, "friction": 0.002, "elasticity": 0},
-        },
-        "puck": {
-            "color": "midnightblue",
-            "physics_body": {"mass": 0.5, "friction": 0, "elasticity": 0},
-        },
-        "controller": {"speed": 1500.0},
-        "table": {"color": "firebrick"},
-        "mode": "DEBUG",
-        "screen": {"width": 1280},
-    }
+    if "--copy" in sys.argv:
+        shutil.copy(__file__, os.curdir)
+    else:
+        """configurations kept in a separate file
+        can make it easy to change things at this
+        orchestration level.
+        Play around with these input paramters and see what you can get it to do!"""
+        input_params = {
+            "player": {
+                "color": "darkred",
+                "physics_body": {"mass": 4, "friction": 0.002, "elasticity": 0},
+            },
+            "puck": {
+                "color": "midnightblue",
+                "physics_body": {"mass": 0.5, "friction": 0, "elasticity": 0},
+            },
+            "controller": {"speed": 1500.0},
+            "table": {"color": "firebrick"},
+            "mode": "DEBUG",
+            "screen": {"width": 1280},
+        }
 
-    # properties
-    table_color = input_params["table"]["color"]
-    ctrl_speed = input_params["controller"]["speed"]
-    player_physics = input_params["player"]["physics_body"]
-    player_color = input_params["player"]["color"]
-    puck_physics = input_params["puck"]["physics_body"]
-    puck_color = input_params["puck"]["color"]
-    screen_w = input_params["screen"]["width"]
-    screen_h = screen_w / 16 * 9  # screen["height"]
-    puck_size = screen_h / 9 / 2
+        # properties
+        table_color = input_params["table"]["color"]
+        ctrl_speed = input_params["controller"]["speed"]
+        player_physics = input_params["player"]["physics_body"]
+        player_color = input_params["player"]["color"]
+        puck_physics = input_params["puck"]["physics_body"]
+        puck_color = input_params["puck"]["color"]
+        screen_w = input_params["screen"]["width"]
+        screen_h = screen_w / 16 * 9  # screen["height"]
+        puck_size = screen_h / 9 / 2
 
-    # configure sprites
-    player = BouncyBallPlayer(
-        image=Surface((puck_size, puck_size)),
-        position=Vector2(screen_w / 2, screen_h / 2),
-        controller=DefaultKeyboardController(
-            float(ctrl_speed), *DEFAULT_KEYBOARD_ACTIONS
-        ),
-        physics_body=PhysicsBody(
-            mass=player_physics["mass"],
-            friction=player_physics["friction"],
-            elasticity=player_physics["elasticity"],
-        ),
-        boundaries=Rect(screen_w, 0, screen_h, 0),
-        color=player_color,
-    )
+        # configure sprites
+        player = BouncyBallPlayer(
+            image=Surface((puck_size, puck_size)),
+            position=Vector2(screen_w / 2, screen_h / 2),
+            controller=DefaultKeyboardController(
+                float(ctrl_speed), *DEFAULT_KEYBOARD_ACTIONS
+            ),
+            physics_body=PhysicsBody(
+                mass=player_physics["mass"],
+                friction=player_physics["friction"],
+                elasticity=player_physics["elasticity"],
+            ),
+            boundaries=Rect(screen_w, 0, screen_h, 0),
+            color=player_color,
+        )
 
-    puck = BouncyBallPuck(
-        image=Surface((puck_size, puck_size)),
-        position=Vector2(screen_w / 4, screen_h / 4),
-        boundaries=Rect(screen_w, 0, screen_h, 0),
-        physics_body=PhysicsBody(
-            mass=puck_physics["mass"],
-            friction=puck_physics["friction"],
-            elasticity=puck_physics["elasticity"],
-        ),
-        color=puck_color,
-    )
+        puck = BouncyBallPuck(
+            image=Surface((puck_size, puck_size)),
+            position=Vector2(screen_w / 4, screen_h / 4),
+            boundaries=Rect(screen_w, 0, screen_h, 0),
+            physics_body=PhysicsBody(
+                mass=puck_physics["mass"],
+                friction=puck_physics["friction"],
+                elasticity=puck_physics["elasticity"],
+            ),
+            color=puck_color,
+        )
 
-    # screen settings and configurations
-    settings = BouncyBallSettings(
-        player, puck, width=screen_w, height=screen_h, bg_color=table_color
-    )
+        # screen settings and configurations
+        settings = BouncyBallSettings(
+            player, puck, width=screen_w, height=screen_h, bg_color=table_color
+        )
 
-    # load sprites and configurations
-    game = BouncyBall(settings, player, puck)
+        # load sprites and configurations
+        game = BouncyBall(settings, player, puck)
 
-    print("Starting game...")
-    game.run()
-    print("Game quit")
+        print("Starting game...")
+        game.run()
+        print("Game quit")

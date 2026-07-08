@@ -4,7 +4,7 @@ from numpy.random import choice, rand
 from pygame import Vector2
 
 
-def get_random_vector(scalar_mag: int = 1, non_negative: bool = False) -> Vector2:
+def get_random_vector(scalar_mag: float = 1.0, non_negative: bool = False) -> Vector2:
     def rand_sign() -> int:
         return choice([-1, 1]) if not non_negative else 1
 
