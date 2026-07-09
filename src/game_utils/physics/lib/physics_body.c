@@ -3,84 +3,67 @@
 #include "physics_body.h"
 #endif
 
-#ifndef vectormath
-#define vectormath
-#include "vector_math.h"
-#endif
-
-const float GRAVITY = 9.81f;
+struct Transform create_transform(vector *position, vector *rotation, vector *velocity, vector *gravity);
 
 
-float *normal_force(struct PhysicsBody *body, coordinate *coord)
+struct PhysicsBody create_physics_body(float *mass, float *friction, float *slip, struct Transform *transform);
+
+vector *normal_force(struct PhysicsBody *body)
 {
-    // Calculate the normal force with coord given for gravity
-    vector* normal_axis = create_vector();
-    *normal_axis[*coord] = body->mass * GRAVITY;
-    return normal_axis; 
+    // Calculate the normal force with vector for Gravity
+    return scale_vector(*(body->mass), body->transform.gravity);
 }
 
 
-float *friction_force(struct PhysicsBody *body, coordinate *coord)
+vector *friction_force(struct PhysicsBody *body)
 {
-    if (body->friction == 0.0f)
+    vector *zf = zero_vector();
+
+    if (*(body->friction) == 0.0f)
     {
-        return to_arr(
-            copy_vector(IDENTITY_VECTOR)
-        );
+        return copy_vector(zf);
     }
-    vector *vbody = from_arr(body->transform.velocity);
 
     // static friction from body and normal forces
-    vector *friction_force = scale_vector(&body->friction, vbody);
-    friction_force = add_vectors(friction_force, normal_force(body, coord));
+    vector *friction_force = scale_vector(*(body->friction), body->transform.velocity);
+    friction_force = add_vectors(friction_force, normal_force(body));
 
     // if the body's velocity is not 0, calculate kinetic friction
-    if (compare_vectors(vbody, ZERO_VECTOR) > 0)
+    if (compare_vectors(body->transform.velocity, zf) > 0)
     {
         // Calculate the friction force using the coefficient of slip
-        friction_force = scale_vector(&body->slip, friction_force);
+        friction_force = scale_vector(*(body->slip), friction_force);
     }   
 
     return friction_force;
 }
 
-float normal_scalar(struct PhysicsBody *body)
+
+vector *move(float *dtime, vector *velocity, struct PhysicsBody *body)
 {
-    return GRAVITY * body->mass;
-}
-
-float friction_scalar(struct PhysicsBody *body)
-{
-    float fforce = normal_scalar(body) * body->friction;
-};
-
-
-
-float *move(float *dtime, float velocity[3], struct PhysicsBody *body)
-{
-    vector* v0 = from_arr(velocity);
-    vector* v1 = scale_vector(dtime, add_vectors(v0, body->transform.velocity));
-
-    return to_arr(v1);
+    return scale_vector(*(dtime), add_vectors(velocity, body->transform.velocity));
 }
 
 
-float *force(float *dtime, float acceleration[3], struct PhysicsBody *body, coordinate *gravity_axis)
+vector *force(float *dtime, vector *acceleration, struct PhysicsBody *body)
 {
-    vector* vnew = scale_vector(dtime, acceleration);
-    vnew = scale_vector(&body->mass, vnew);
-    vnew = add_vectors(vnew, body->transform.velocity);
+    vector* force = scale_vector(
+        *(body->mass), 
+        scale_vector(*dtime, acceleration)
+    );
 
-    // if (magnitude(vnew)  magnitude(friction_force(body, gravity_axis)))
-    // {
-    // }
-    // else
-    // {
-        
-    // }
-    return to_arr(vnew);
+    if (compare_vectors(force, friction_force(body)) > 0)
+    {
+        return force;
+    }
+    else
+    {
+        return add_vectors(force, scale_vector(-1, friction_force(body)));
+    }
 }
 
 
-float *rotate(float *dtime, float rotations[3], struct PhysicsBody *body);
+vector *rotate(float *dtime, float *rot_mag, vector *rotations, struct PhysicsBody *body);
 
+
+void apply_force_to_ptr(float *dtime, vector *acceleration, struct PhysicsBody *body);

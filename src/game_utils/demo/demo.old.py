@@ -11,7 +11,7 @@ from game_utils.game.game import SpriteGame
 from game_utils.physics import PhysicsBody
 from game_utils.screen import ScreenSettings
 from game_utils.sprites import PhysicsSprite, PlayerSprite
-from game_utils.vector_utils.vector_utils import apply_vector_actions, get_random_vector
+from game_utils.physics.vector_utils import apply_vector_actions, get_random_vector
 
 
 class BouncyBallSprite:
