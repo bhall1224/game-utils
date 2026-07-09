@@ -1,7 +1,7 @@
 
 from typing import Any
 
-import pygame.display as display
+from pygame import display
 from pygame import FULLSCREEN, Color, Surface
 
 ColorType = str | tuple[int, int, int] | Color
@@ -14,11 +14,12 @@ class ScreenSettings:
         title: str | None = None,
         bg_color: ColorType | None = None,
         bg_image: Surface | None = None,
-        display_mod: Any = display
+        display_mod: Any | None = None
     ):
-        self.display_mod = display_mod
+        self.display_mod = display_mod or display
+
         if width == 0.0 and height == 0.0:
-            self.screen_surface = self.display_mod.set_mode((0, 0), FULLSCREEN)
+            self.screen_surface = self.display_mod.set_mode(flags=FULLSCREEN)
             self.width = self.screen_surface.get_width()
             self.height = self.screen_surface.get_height()
         else:

@@ -83,8 +83,8 @@ def sprite(name=None):
 def sprite_group(name=None):
     def __inner(fn):
         new_sprites = fn()
-        __SPRITE_GROUPS[name or fn.__name__] = Group(*new_sprites)
-        __SPRITES.update({new_sprites})
+        __SPRITE_GROUPS[name or fn.__name__] = Group(*new_sprites.values())
+        __SPRITES.update(new_sprites)
         return fn
     return __inner
 
