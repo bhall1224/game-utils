@@ -1,6 +1,30 @@
-import pygame
-from typing import TypedDict
+from typing import Any, TypedDict
 from enum import IntEnum, auto
+from numpy import array
+from pygame import joystick
+from pygame import event
+from pygame import (
+    K_RIGHT,
+    K_LEFT,
+    K_UP,
+    K_DOWN,
+    K_a,
+    K_s,
+    K_d,
+    K_w,
+    K_ESCAPE,
+    JOYAXISMOTION,
+    JOYBALLMOTION,
+    JOYBUTTONDOWN,
+    JOYBUTTONUP,
+    JOYDEVICEADDED,
+    JOYDEVICEREMOVED,
+    JOYHATMOTION,
+)
+
+#####################################################################################
+# Constants and configurations for mapping controller input to action
+#####################################################################################
 
 class DefaultCommand(IntEnum):
     """Default controller configurations"""
@@ -22,53 +46,10 @@ class ControllerMapping(TypedDict):
     action_type: int
     action_name: str
 
-DEFAULT_KEYBOARD_ACTIONS: list[ControllerMapping] = [
-    {
-        "input_id": pygame.K_RIGHT,
-        "action_name": DefaultCommand.X_AXIS_POS.name,
-        "action_type": ActionType.BUTTON.value,
-    },
-    {
-        "input_id": pygame.K_LEFT,
-        "action_name": DefaultCommand.X_AXIS_NEG.name,
-        "action_type": ActionType.BUTTON.value,
-    },
-    {
-        "input_id": pygame.K_DOWN,
-        "action_name": DefaultCommand.Y_AXIS_POS.name,
-        "action_type": ActionType.BUTTON.value,
-    },
-    {
-        "input_id": pygame.K_UP,
-        "action_name": DefaultCommand.Y_AXIS_NEG.name,
-        "action_type": ActionType.BUTTON.value,
-    },
-    {
-        "input_id": pygame.K_d,
-        "action_name": DefaultCommand.X_AXIS_POS.name,
-        "action_type": ActionType.BUTTON.value,
-    },
-    {
-        "input_id": pygame.K_a,
-        "action_name": DefaultCommand.X_AXIS_NEG.name,
-        "action_type": ActionType.BUTTON.value,
-    },
-    {
-        "input_id": pygame.K_s,
-        "action_name": DefaultCommand.Y_AXIS_POS.name,
-        "action_type": ActionType.BUTTON.value,
-    },
-    {
-        "input_id": pygame.K_w,
-        "action_name": DefaultCommand.Y_AXIS_NEG.name,
-        "action_type": ActionType.BUTTON.value,
-    },
-    {
-        "input_id": pygame.K_ESCAPE,
-        "action_name": DefaultCommand.QUIT.name,
-        "action_type": ActionType.BUTTON.value,
-    },
-]
+
+#####################################################################################
+# Classes for controller behavior and configuration
+#####################################################################################
 
 class Controller:
     def __init__(
@@ -92,7 +73,7 @@ class JoystickController(Controller):
 
     def __init__(
         self,
-        input: pygame.joystick.JoystickType,
+        input: joystick.JoystickType,
         speed: float,
         *args: ControllerMapping,
     ):
@@ -107,7 +88,32 @@ class JoystickController(Controller):
         self.input = input
 
 
-__NPC_CONTROLLERS: dict[str, Controller] = {}
+
+#####################################################################################
+# Methods for annotating event handlers and other methods for contoller registration
+#####################################################################################
+
+__CONTROLLERS: dict[str, Controller] = {}
+
+def controller(name=None):
+    def __inner(fn):
+        # TODO: register controller by instance id
+        # should be an event handler type function
+        return add_controller(
+            name=name or fn.__name__,
+            controller=fn
+        )
+    return __inner
+
+def get_all_controllers():
+    return array(__CONTROLLERS.values())
+
+def get_controller(name):
+    return __CONTROLLERS.get(name)
+
+def add_controller(name, controller):
+    __CONTROLLERS[name] = controller
+    return controller
 
 def get_joysticks(
         speed: float,
@@ -124,57 +130,109 @@ def get_joysticks(
     Returns:
         JoystickController[]: All connected joysticks as a Py List object
     """        
-    return [
-        JoystickController(pygame.joystick.Joystick(i), speed, *actions)
-        for i in range(pygame.joystick.get_count())
-    ]
-
-def keyboard_controller(*actions):
-    def __inner(fn):
-        def __helper(**config):
-            speed = config.get("controller", {}).get("speed", 0.0)
-            controller = Controller(speed, *actions)
-            return fn(controller, **config)
-        return __helper
-    return __inner
-
-def default_keyboard_controller(*actions):
-    return keyboard_controller(*DEFAULT_KEYBOARD_ACTIONS, *actions)
-
-def joystick_controller(player: int = 0, *actions: ControllerMapping):
-    """Annotate a configured or non configured method to inject a given JoystickController
-    into the player creation function.  
-
-    Args:
-        player (int, optional): The player to assign this joystick. Defaults to 0.
-        *actions: The list of configured controller actions
-
-    Returns: the annotated method
-    """    
-    def __inner(fn):
-        def __helper(**config):
-            speed = config.get("controller", {}).get("speed", 0.0)
-            joysticks = get_joysticks(speed, *actions)
-            controller = joysticks[player]
-            return fn(controller, **config)
-        return __helper
-    return __inner
+    return array([
+        JoystickController(joystick.Joystick(i), speed, *actions)
+        for i in range(joystick.get_count())
+    ])
 
 
-def npc_controller(name=None, *actions: ControllerMapping):
-    def __inner(fn):
-        def __helper(**config):
-            speed = config.get("controller", {}).get("speed", 0.0)
-            controller = Controller(speed, *actions)
-            __NPC_CONTROLLERS[
-                name or str(len(__NPC_CONTROLLERS.items()))
-            ] = controller
-            return fn(controller, **config)
-        return __helper
-    return __inner
+def controller_events(fn):
+    def __wrapper(event: event.Event, data: dict[str, Any], **config):
+        # TODO: pass event data to controller
+        # map controller to instance id
+        # grab by instance id per player and pass data
+        if event.type == JOYAXISMOTION:
+            print("axis movement!")
+        elif event.type == JOYHATMOTION:
+            print("hat movement!")
+        elif event.type == JOYBALLMOTION:
+            print("ball movement!")
+        elif event.type == JOYBUTTONDOWN:
+            print("button down!")
+        elif event.type == JOYBUTTONUP:
+            print("button up!")
+        elif event.type == JOYDEVICEADDED:
+            print("JOY ADDED!")
+        elif event.type == JOYDEVICEREMOVED:
+            print("JOY REMOVED!")
+        return fn(event, data, **config)
+    return __wrapper
+        
+#####################################################################################
+# Constants and configurations for specific controllers
+#####################################################################################
 
-def get_npc_controller(name):
-    return __NPC_CONTROLLERS.get(name)
+DEFAULT_KEYBOARD_ACTIONS: list[ControllerMapping] = array([
+    {
+        "input_id": K_RIGHT,
+        "action_name": DefaultCommand.X_AXIS_POS.name,
+        "action_type": ActionType.BUTTON.value,
+    },
+    {
+        "input_id": K_LEFT,
+        "action_name": DefaultCommand.X_AXIS_NEG.name,
+        "action_type": ActionType.BUTTON.value,
+    },
+    {
+        "input_id": K_DOWN,
+        "action_name": DefaultCommand.Y_AXIS_POS.name,
+        "action_type": ActionType.BUTTON.value,
+    },
+    {
+        "input_id": K_UP,
+        "action_name": DefaultCommand.Y_AXIS_NEG.name,
+        "action_type": ActionType.BUTTON.value,
+    },
+    {
+        "input_id": K_d,
+        "action_name": DefaultCommand.X_AXIS_POS.name,
+        "action_type": ActionType.BUTTON.value,
+    },
+    {
+        "input_id": K_a,
+        "action_name": DefaultCommand.X_AXIS_NEG.name,
+        "action_type": ActionType.BUTTON.value,
+    },
+    {
+        "input_id": K_s,
+        "action_name": DefaultCommand.Y_AXIS_POS.name,
+        "action_type": ActionType.BUTTON.value,
+    },
+    {
+        "input_id": K_w,
+        "action_name": DefaultCommand.Y_AXIS_NEG.name,
+        "action_type": ActionType.BUTTON.value,
+    },
+    {
+        "input_id": K_ESCAPE,
+        "action_name": DefaultCommand.QUIT.name,
+        "action_type": ActionType.BUTTON.value,
+    },
+])
 
-def get_npc_controllers():
-    return list(__NPC_CONTROLLERS.values())
+class XBoxAxis(IntEnum):
+    LX_AXIS = auto()
+    LY_AXIS = auto()
+    RX_AXIS = auto()
+    RY_AXIS = auto()
+    L_TRIGGER = auto()
+    R_TRIGGER = auto()
+
+
+class XBoxButton(IntEnum):
+    A_BUTTON = auto()
+    B_BUTTON = auto()
+    X_BUTTON = auto()
+    Y_BUTTON = auto()
+    L_BUMPER = auto()
+    R_BUMPER = auto()
+    BACK_BUTTON = auto()
+    START_BUTTON = auto()
+    L_STICK_BUTTON = auto()
+    R_STICK_BUTTON = auto()
+    HOME_BUTTON = auto()
+
+
+class XBoxHat(IntEnum):
+    X = auto()
+    Y = auto()
