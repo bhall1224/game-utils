@@ -1,13 +1,18 @@
+from collections.abc import Callable
+from enum import Enum
 from typing import Any
 
 from pygame import Rect, Surface, Vector2
 from pygame.sprite import Sprite, Group
 
-PLAYER = "player"
+from game_utils.game import GameError
+
 __SPRITES = {}
-__SPRITE_GROUPS = {}
 
 class GameSprite(Sprite):
+    CONTROLLER_INPUT = "controller"
+    DELTA_TIME = "dt"
+
     """_summary_
 
     Args:
@@ -30,39 +35,55 @@ class GameSprite(Sprite):
             boundaries (Rect | None, optional): Optional boundary coordinates
         """
         super().__init__()
-        self.image = image
-        _, _, *dimensions = image.get_rect()
-        self.rect = Rect(position.x, position.y, *dimensions)
-        self.position = position
-        self.boundaries = boundaries
+        self._image = image
+        self._position = position
+        self._boundaries = boundaries
 
-class PhysicsSprite(GameSprite):
-    """GameSprite that uses a PhysicsBody reference with which to apply physics"""
+    def update(self, *args, **kwargs):
+        """update this sprite with given information
 
-    def __init__(
+        Args:
+            dt (float): the change in time
+            controller_input (Vector2): the vector with which to update this sprite's position
+        """
+        if len(args) > 0 and isinstance(args[0], float):
+            dt = args[0]
+        elif self.DELTA_TIME in kwargs.keys():
+            dt = kwargs[self.DELTA_TIME]
+        else:
+            raise GameError("no argument for delta time given")
+        
+        if len(args) > 1 and isinstance(args[1], Callable[[float, Vector2], Vector2]):
+            controller_input = args[1]
+        elif self.CONTROLLER_INPUT in kwargs.keys():
+            controller_input = kwargs[self.CONTROLLER_INPUT]
+        else:
+            raise GameError("no callback for controller input given")
+
+        self._image = controller_input(dt, self._position)
+
+    def get_rect(self):
+        return self._image.get_rect()
+    
+    def get_position(self):
+        return self._position
+    
+    def set_position(self, position: Vector2):
+        self._position = position
+
+    def boundary_behavior(
         self,
-        image: Surface,
-        position: Vector2,
-        physics_body: Any,
-        boundaries: Rect | None = None,
+        along_x_axis: Callable[[Vector2], Vector2],
+        along_y_axis: Callable[[Vector2], Vector2]
     ):
-        super().__init__(image, position, boundaries)
-        self.physics_body = physics_body
+        if self._boundaries is None:
+            return
+        
+        if self._position.x > self._boundaries.width or self._position < self._boundaries.left:
+            self._position = along_x_axis(self._position)
 
-
-class PlayerSprite(PhysicsSprite):
-    """GameSprite with PhysicsBody and Controller input"""
-
-    def __init__(
-        self,
-        image: Surface,
-        position: Vector2,
-        controller: Any,
-        physics_body: Any,
-        boundaries: Rect | None = None,
-    ):
-        super().__init__(image, position, physics_body, boundaries)
-        self.controller = controller
+        if self._position.y > self._boundaries.height or self._position < self._boundaries.top:
+            self._position = along_y_axis(self._position)
 
 
 def sprite(name=None):
@@ -77,14 +98,6 @@ def sprite(name=None):
         __SPRITES[
             name or fn.__name__
         ] = fn()
-        return fn
-    return __inner
-
-def sprite_group(name=None):
-    def __inner(fn):
-        new_sprites = fn()
-        __SPRITE_GROUPS[name or fn.__name__] = Group(*new_sprites)
-        __SPRITES.update({new_sprites})
         return fn
     return __inner
 

@@ -8,4 +8,5 @@ from .game import (
     inject_config,
     NEXT_UPDATE_EVENT,
     NEXT_UPDATE_EVENT_ID,
+    GameError
 )
