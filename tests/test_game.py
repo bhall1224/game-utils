@@ -82,19 +82,19 @@ def event_handler_test_many_scenes(event, data, **config):
 
 def test_game():
     game.screen_handler(screen_handler_mock_no_dt)
-    game.config(mock_config)
+    game.register_config(mock_config)
     game.scene()(update_scene)
     game.run()(event_handle_test_update_flag)
 
 def test_game_with_start_scene():
     game.screen_handler(screen_handler_mock_no_dt)
-    game.config(mock_config)
+    game.register_config(mock_config)
     game.scene(TEST_SCENE)(update_with_scene_name)
     game.run(TEST_SCENE)(event_handle_test_update_flag)
 
 def test_game_with_many_scenes():
     game.screen_handler(screen_handler_mock_with_dt)
-    game.config(mock_config_with_dt)
+    game.register_config(mock_config_with_dt)
     game.scene()(update_scene)
     game.scene(START_SCENE)(update_start_scene)
     game.scene(TEST_SCENE)(update_with_scene_name)

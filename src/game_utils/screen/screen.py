@@ -1,54 +1,45 @@
 
-from typing import Any
-
-import pygame.display as display
-from pygame import FULLSCREEN, Color, Surface
+from pygame import display
+from pygame import FULLSCREEN, Color, Surface, Vector2
 
 ColorType = str | tuple[int, int, int] | Color
 
 class ScreenSettings:
     def __init__ (
         self,
-        width: float = 0.0,
-        height: float = 0.0,
+        dimensions: Vector2 | None = None,
         title: str | None = None,
         bg_color: ColorType | None = None,
         bg_image: Surface | None = None,
-        display_mod: Any = display
     ):
-        self.display_mod = display_mod
-        if width == 0.0 and height == 0.0:
-            self.screen_surface = self.display_mod.set_mode((0, 0), FULLSCREEN)
-            self.width = self.screen_surface.get_width()
-            self.height = self.screen_surface.get_height()
+        if dimensions is None:
+            self.__screen_surface = display.set_mode((0, 0), FULLSCREEN)
+            self.__dimensions = Vector2(
+                self.__screen_surface.get_width(),
+                self.__screen_surface.get_height()
+            )
         else:
-            self.screen_surface = self.display_mod.set_mode((width, height))
-            self.width = width
-            self.height = height
+            self.__dimensions = dimensions
+            self.__screen_surface = display.set_mode(self.__dimensions)
 
         if title is not None:
-            self.display_mod.set_caption(title)
+            display.set_caption(title)
         
-        self.bg_color = bg_color
-        self.bg_image = bg_image
-        
-__SETTINGS_MAPPING: dict[str, ScreenSettings] = {}
+        self.__bg_color = bg_color
+        self.__bg_image = bg_image
 
-def screen_settings(name=None):
-    def __inner(fn):
-        __SETTINGS_MAPPING[name or fn.__name__] = fn()
-        return fn
-    return __inner
+    def update_screen(self):
+        if self.__bg_color is not None:
+            self.__screen_surface.fill(self.__bg_color)
+        elif self.__bg_image is not None:
+            self.__screen_surface.blit(self.__bg_image, self.__dimensions)
+        display.flip()
 
-def screen_update(name=None):
-    def __inner(fn):
-        def __inner_callback(data, **config):
-            settings = __SETTINGS_MAPPING[name or fn.__name__]
-            if settings.bg_color is not None:
-                settings.screen_surface.fill(settings.bg_color)
-            elif settings.bg_image is not None:
-                settings.screen_surface.blit(settings.bg_image, (settings.width, settings.height))
-            settings.display_mod.flip()
-            return fn(data, settings, **config)
-        return __inner_callback        
-    return __inner
+    def draw_image(self, image):
+        self.__screen_surface.blit(image, image.get_rect())
+
+    def get_dimensions(self):
+        return self.__dimensions
+    
+    def get_screen(self):
+        return self.__screen_surface

@@ -1,71 +1,96 @@
-import pygame
-from typing import TypedDict
-from enum import IntEnum, auto
+from collections.abc import Callable
+from pygame import Vector2, joystick, key, locals
 
-class DefaultCommand(IntEnum):
-    """Default controller configurations"""
-    X_AXIS_POS = auto()
-    X_AXIS_NEG = auto()
-    Y_AXIS_POS = auto()
-    Y_AXIS_NEG = auto()
-    QUIT = auto()
-    ACTION_1 = auto()
-    ACTION_2 = auto()
+from game_utils.physics.physics import PhysicsBody
 
-class ActionType(IntEnum):
-    BUTTON = auto()
-    AXIS = auto()
-    HAT = auto()
+if not joystick.get_init():
+    joystick.init()
 
-class ControllerMapping(TypedDict):
-    input_id: int
-    action_type: int
-    action_name: str
+ButtonAction = Callable[[None], bool]
+AxisAction = Callable[[None], float]
+HatAction = Callable[[None], Vector2]
 
-DEFAULT_KEYBOARD_ACTIONS: list[ControllerMapping] = [
-    {
-        "input_id": pygame.K_RIGHT,
-        "action_name": DefaultCommand.X_AXIS_POS.name,
-        "action_type": ActionType.BUTTON.value,
-    },
-    {
-        "input_id": pygame.K_LEFT,
-        "action_name": DefaultCommand.X_AXIS_NEG.name,
-        "action_type": ActionType.BUTTON.value,
-    },
-    {
-        "input_id": pygame.K_DOWN,
-        "action_name": DefaultCommand.Y_AXIS_POS.name,
-        "action_type": ActionType.BUTTON.value,
-    },
-    {
-        "input_id": pygame.K_UP,
-        "action_name": DefaultCommand.Y_AXIS_NEG.name,
-        "action_type": ActionType.BUTTON.value,
-    },
-    {
-        "input_id": pygame.K_d,
-        "action_name": DefaultCommand.X_AXIS_POS.name,
-        "action_type": ActionType.BUTTON.value,
-    },
-    {
-        "input_id": pygame.K_a,
-        "action_name": DefaultCommand.X_AXIS_NEG.name,
-        "action_type": ActionType.BUTTON.value,
-    },
-    {
-        "input_id": pygame.K_s,
-        "action_name": DefaultCommand.Y_AXIS_POS.name,
-        "action_type": ActionType.BUTTON.value,
-    },
-    {
-        "input_id": pygame.K_w,
-        "action_name": DefaultCommand.Y_AXIS_NEG.name,
-        "action_type": ActionType.BUTTON.value,
-    },
-    {
-        "input_id": pygame.K_ESCAPE,
-        "action_name": DefaultCommand.QUIT.name,
-        "action_type": ActionType.BUTTON.value,
-    },
-]
+class KeyboardController:
+    def __init__(self, default_actions: dict[int, ButtonAction]):
+        self.__actions = default_actions
+
+    def action(self, key: int):
+        return self.__actions[key]()
+
+
+class Controller:
+    def __init__(
+        self,
+        buttons: list[ButtonAction] = [],
+        axes: list[AxisAction] = [],
+        hats: list[HatAction] = [],
+    ):
+        self.__buttons = buttons
+        self.__axes = axes
+        self.__hats = hats
+
+    def button(self, index):
+        return self.__buttons[index]()
+
+    def axis(self, index):
+        return self.__axes[index]()
+
+    def hat(self, index):
+        return self.__hats[index]()
+    
+def inject_controller(sprite, buttons: list[ButtonAction] = [], axes: list[AxisAction] = [], hats: list[HatAction] = []):
+    """Injects a controller into a sprite object.  This will create a new Controller
+    object and assign it to the sprite's controller attribute.
+
+    Args:
+        sprite (GameSprite): The sprite to inject the controller into
+        buttons (list[ButtonAction]): The list of button actions
+        axes (list[AxisAction]): The list of axis actions
+        hats (list[HatAction]): The list of hat actions
+    """
+    if not hasattr(sprite, "controller"):
+        raise AttributeError("Sprite does not have a controller attribute")
+
+    sprite.controller = Controller(
+        buttons=buttons,
+        axes=axes,
+        hats=hats
+    )
+
+        
+# key.K_RIGHT: {
+#         "action_name": DefaultCommand.X_AXIS_POS.name,
+#         "action_type": ActionType.BUTTON.value,
+#     },
+#      pygame.K_LEFT:{
+#         "action_name": DefaultCommand.X_AXIS_NEG.name,
+#         "action_type": ActionType.BUTTON.value,
+#     },
+#     pygame.K_DOWN: {
+#         "action_name": DefaultCommand.Y_AXIS_POS.name,
+#         "action_type": ActionType.BUTTON.value,
+#     },
+#     pygame.K_UP: {
+#         "action_name": DefaultCommand.Y_AXIS_NEG.name,
+#         "action_type": ActionType.BUTTON.value,
+#     },
+#     pygame.K_d: {
+#         "action_name": DefaultCommand.X_AXIS_POS.name,
+#         "action_type": ActionType.BUTTON.value,
+#     },
+#     pygame.K_a: {
+#         "action_name": DefaultCommand.X_AXIS_NEG.name,
+#         "action_type": ActionType.BUTTON.value,
+#     },
+#     pygame.K_s: {
+#         "action_name": DefaultCommand.Y_AXIS_POS.name,
+#         "action_type": ActionType.BUTTON.value,
+#     },
+#     pygame.K_w: {
+#         "action_name": DefaultCommand.Y_AXIS_NEG.name,
+#         "action_type": ActionType.BUTTON.value,
+#     },
+#     pygame.K_ESCAPE: {
+#         "action_name": DefaultCommand.QUIT.name,
+#         "action_type": ActionType.BUTTON.value,
+#     },

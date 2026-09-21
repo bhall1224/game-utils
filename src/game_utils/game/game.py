@@ -3,6 +3,8 @@ import os
 import pygame
 import json
 
+from game_utils import sprites, get_delta_time
+
 # module relies heavily on pygame
 # initializing at module import insures
 # everything is ready
@@ -10,92 +12,83 @@ if not pygame.get_init():
     print("pygame not initialized, initializing now...")
     pygame.init()
 
-# TYPE ALIASES
-##########################################################################################################
-
-GameError = Exception
-
-# CONSTANTS
-##########################################################################################################
-
+# A special user event for changing scenes within the event listener
 NEXT_UPDATE_EVENT = pygame.USEREVENT
-NEXT_UPDATE_EVENT_ID = "next_scene_id"
 
-__CONFIG = "++config++"
-__SCREEN_HANDLER = "++screen++"
+# Constant defaults for screen refresh
+FRAMERATE = 60.0
+UNITS = 1000.0 # pygame clock returns ms - take s as default
 
-# GLOBAL SETTINGS
-##########################################################################################################
+class ScreenRefresh:
+    framerate = FRAMERATE
+    units = UNITS
 
-__scene_mapping: dict[str, Any] = {}
-__handler_mapping: dict[str, Any] = {}
+class Scene:
+    def __init__(
+            self, 
+            screen, 
+            player: sprites.GameSprite,
+            other_sprites: list[sprites.GameSprite] = [],
+            config: dict[str, Any] = {},
+            screen_refresh = ScreenRefresh(),
+        ):
+        self.__screen = screen
+        self.__player = player
+        self.__other_sprites = other_sprites.copy()
+        self.__config = config.copy()
+        self.__screen_refresh = screen_refresh
 
-# ANNOTATION METHODS
-##########################################################################################################
+    def update_screen(self):
+        self.__screen.update_screen()
 
+    def update_player(self, new_pos):
+        self.__player.update(new_pos)
 
-def run(*scenes: str):
-    """Main entry point for the game.  Annotate a method that sets the game configurations, and the game
-    will start when you run the script with the Python interpreter.  No __name__ == "__main__" required.
+    def update_other_sprites(self, *sprite_positions):
+        map(
+            lambda sprite, position: sprite.update(position),
+            self.__other_sprites,
+            sprite_positions,
+        )
 
-    Args:
-        title (str | None, optional): The title of the game window. Defaults to None.
-        *scenes (str): The scenes to include in the game.
+    def config(self):
+        return self.__config
+    
+    def get_delta_time(self):
+        return get_delta_time(self.__screen_refresh.framerate, self.__screen_refresh.units)
+    
 
-    Raises:
-        GameError: An error raised during game play
+# global reference in memory for registered scenes
+__SCENE_MAPPING: dict[str, Scene] = {}
 
-    Returns:
-        () -> Any: The annoted method
-    """
+# global reference in memory for configuration dictionary
+__CONFIGURATION: dict[str, Any] = {}
 
-    # annotated function returns config data or None
-    def main(event_handler_func):
-        running = True
-        dt = 0.0
-        i = 0
+__SPRITE_MAPPING: dict[str, sprites.GameSprite]
 
-        # get optional screen update function
-        screen_update_func = __handler_mapping.get(__SCREEN_HANDLER)
-
-        # get optional config function
-        config = __handler_mapping.get(__CONFIG, lambda: {})()
-
-        # first scene is either the scene given or the first one in the mapping
-        curr_scene = __get_default_scene(scenes, i)
-
-        while running:
-            try:
-                scene_fn = __scene_mapping[curr_scene]
-            except KeyError:
-                raise GameError(f"scene not found! scene: {curr_scene}")
-
-            data_packet = scene_fn(dt, **config)
-
-            if screen_update_func is not None:
-                dt = screen_update_func(data_packet, **config)
-
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                elif event.type == NEXT_UPDATE_EVENT:
-                    try:
-                        if event.dict.get(NEXT_UPDATE_EVENT_ID) is not None:
-                            curr_scene = event.dict[NEXT_UPDATE_EVENT_ID]
-                        else:
-                            i += 1
-                            curr_scene = __get_default_scene(scenes, i)
-                    except KeyError:
-                        raise GameError(f"next scene not given! event: {event}")
-                else:
-                    running = event_handler_func(event, data_packet, **config)
-
-        return event_handler_func
-
-    return main
+# __CONTROLLER_MAPPING: dict[str, Controller]
 
 
-def scene(name=None):
+def run(event_handler_fn):
+    running = True
+
+    while running:
+        scene = __scenes_as_list()[0]
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == NEXT_UPDATE_EVENT:
+                if event.dict is not None:
+                    __SCENE_MAPPING.update(event.dict)
+                __SCENE_MAPPING.pop(scene.__name__)
+            else:
+                running = event_handler_fn(event, scene, **__CONFIGURATION)
+
+    return event_handler_fn
+
+
+def scene(name):
     """Decorate a method to register it as a scene.  A scene is basically an update
     function that will be called once per game loop.  You may register as many as you wish.
     These are inteded for game logic that relies on the change in time, and serve as an entry
@@ -105,21 +98,20 @@ def scene(name=None):
         name (str, optional): Pass an optional name for the scene, which will be added as a tag.
     Defaults to None.
     """
+    def __inner(scene_fn):
+        # inner method simply registers the function in the map
+        __SCENE_MAPPING[name] = scene_fn()
 
-    # inner method simply registers the function in the map
-    def add_scene(fn):
-        return __add_scene(fn, name)
-
-    return add_scene
+    return __inner
 
 
-def config(
+def register_config(
     config_path: str | None = None,
     config_file: str | None = None,
     assets_path: str | None = None,
     resources_path: str | None = None,
 ):
-    """Register a configuration handler () -> Any 
+    """Register a configuration handler () -> Any
     This function will be called once at the start of the game
 
 
@@ -130,14 +122,15 @@ def config(
         resources_path (str | None, optional): Path to the resources directory. Defaults to None
 
     Returns:
-        () -> Any: A special callback function for handling configuration data. 
+        () -> Any: A special callback function for handling configuration data.
     """
+
     def __inner(fn):
         def __config_path(path, file):
             return os.path.join(os.getcwd(), path, file)
-        
+
         def __wrapper():
-            config = fn()
+            config = fn() or {}
             config_file_path = __config_path(
                 config_path or ".config", config_file or "config.json"
             )
@@ -156,24 +149,39 @@ def config(
                 config["RESOURCES_PATH"] = resources_file_path
                 os.environ["RESOURCES_PATH"] = resources_file_path
 
+            __CONFIGURATION.update(config)
+
             return config
 
-        return __add_handler(__wrapper, __CONFIG)
+        return __wrapper
     return __inner
 
+def config(key=None):
+    def __inner(fn):
+        def __wrapper(*args, **_):
+            registered_config = __CONFIGURATION.get(key, __CONFIGURATION) if key else __CONFIGURATION
+            return fn(*args, **registered_config)
+        return __wrapper
+    return __inner
 
-def screen_handler(fn):
-    """Register a method for any screen handling logic
-    (optional)
+def register_sprite(name):
+    def __inner(sprite_fn):
+        def __wrapper(**config):
+            sprite = sprite_fn(**config)
+            __SPRITE_MAPPING[name] = sprite
+            return sprite
+        return __wrapper
+    return __inner
 
-    Args:
-        fn ((data, **config) -> bool): The annotated method
+def sprite(name):
+    def __inner(fn):
+        def __wrapper(sprite, *args, **config):
+            sprite = __SPRITE_MAPPING[name]
+            return fn(sprite, *args, **config)
+        return __wrapper
+    return __inner
 
-    Returns:
-        (float, **config) -> float: A special callback function for handling screen events
-    """
-    return __add_handler(fn, __SCREEN_HANDLER)
-
+# def register_controller(id):
 
 def tag(*args, **kwargs):
     """Set attributes to functions with which you can search using search methods
@@ -198,36 +206,12 @@ def tag(*args, **kwargs):
     return set_attributes
 
 
-# ACCESS METHODS
-##########################################################################################################
-
-
 def get_by_tag(tag):
-    return [fn for fn in __scene_mapping if tag in getattr(fn, "tags", [])]
+    return [fn for fn in __SCENE_MAPPING if tag in getattr(fn, "tags", [])]
 
 
-def inject_config(key=None):
-    def __inner(fn):
-        def __wrapper(*args):
-            config = __handler_mapping.get(__CONFIG, lambda: {})()
-            config = config.get(key) if key is not None else config
-            return fn(*args, **config)
-        return __wrapper
-    return __inner
+
+def __scenes_as_list():
+    return list(__SCENE_MAPPING.values())
 
 
-# HELPER METHODS
-##########################################################################################################
-def __get_default_scene(scenes, i):
-    return list(__scene_mapping.keys())[i] if len(scenes) == 0 else scenes[i]
-
-
-def __add_scene(fn, name):
-    fn_name = name or fn.__name__
-    __scene_mapping[fn_name] = fn
-    return fn
-
-
-def __add_handler(fn, name):
-    __handler_mapping[name] = fn
-    return fn

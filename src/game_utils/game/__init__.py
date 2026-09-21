@@ -1,11 +1,11 @@
 from .game import (
     run,
     tag,
-    config,
+    register_config,
     screen_handler,
     scene,
     get_by_tag,
-    inject_config,
+    config,
     NEXT_UPDATE_EVENT,
     NEXT_UPDATE_EVENT_ID,
     GameError

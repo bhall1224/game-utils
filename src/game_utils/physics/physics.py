@@ -174,12 +174,35 @@ class PhysicsBody:
     def __str__(self) -> str:
         return str(self.__position)
     
-def get_random_vector(scalar_mag: float = 1.0, non_negative: bool = False) -> Vector3:
-    def rand_sign() -> int:
-        return choice([-1, 1]) if not non_negative else 1
+    @staticmethod
+    def get_random_vector(scalar_mag: float = 1.0, non_negative: bool = False) -> Vector3:
+        def rand_sign() -> int:
+            return choice([-1, 1]) if not non_negative else 1
 
-    return Vector3(
-        x=rand() * rand_sign() * scalar_mag,
-        y=rand() * rand_sign() * scalar_mag,
-        z=rand() * rand_sign() * scalar_mag
+        return Vector3(
+            x=rand() * rand_sign() * scalar_mag,
+            y=rand() * rand_sign() * scalar_mag,
+            z=rand() * rand_sign() * scalar_mag
+        )
+    
+def inject_physics_body(sprite, mass: float, friction: float = 0.0, elasticity: float = 0.0, slip: float | None = None):
+    """Injects a physics body into a sprite object.  This will create a new PhysicsBody
+    object and assign it to the sprite's physics_body attribute.
+
+    Args:
+        sprite (GameSprite): The sprite to inject the physics body into
+        mass (float): The mass of the physics body
+        friction (float, optional): The static friction coefficient. Defaults to 0.0.
+        elasticity (float, optional): The elasticity coefficient. Defaults to 0.0.
+        slip (float | None, optional): The slip coefficient. Defaults to None.
+    """
+    if not hasattr(sprite, "physics_body"):
+        raise AttributeError("Sprite does not have a physics_body attribute")
+
+    sprite.physics_body = PhysicsBody(
+        mass=mass,
+        position=sprite.get_position(),
+        friction=friction,
+        elasticity=elasticity,
+        slip=slip
     )
