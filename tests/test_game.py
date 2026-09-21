@@ -40,7 +40,7 @@ def update_test_scene(dt, **config):
 
     if config.get(TRIGGER_SCENE_CHANGE_FLAG) is not None:
         pygame.event.post(
-            pygame.event.Event(game.NEXT_UPDATE_EVENT, {game.NEXT_UPDATE_EVENT_ID: START_SCENE})
+            pygame.event.Event(game.NEXT_SCENE_EVENT, {game.NEXT_UPDATE_EVENT_ID: START_SCENE})
         )
 
     return {"age": 42}
@@ -52,7 +52,7 @@ def update_start_scene(dt, **config):
 
     if dt > 0.0:
         pygame.event.post(
-            pygame.event.Event(game.NEXT_UPDATE_EVENT, {game.NEXT_UPDATE_EVENT_ID: TEST_SCENE})
+            pygame.event.Event(game.NEXT_SCENE_EVENT, {game.NEXT_UPDATE_EVENT_ID: TEST_SCENE})
         )
     
     return {"age": 1000, "name": "Dracula"}

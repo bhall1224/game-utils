@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 
-from game_utils import game, clock, screen, sprites, controller, physics
+from game_utils.game import Game
+from game_utils import sprites
+from game_utils import screen
+from game_utils import clock
+
 import pygame
 
 WIDTH = 1280
@@ -11,8 +15,9 @@ SCENE = "bouncy-ball"
 PLAYER = "striker"
 PUCK = "puck"
 
+game = Game()
 
-@game.register_config()
+@game.config()
 def config():
     return {
         PLAYER: {
@@ -47,8 +52,6 @@ def player_controller(dt, **config):
 
     return pygame.Vector2((r - l), (d - u)) * dt * config["controller"]["speed"]
 
-@sprites.player_sprite(PLAYER)
-@game.config()
 def player_sprite(**config):
     return sprites.PlayerSprite(
         image=pygame.Surface((PUCK_SIZE, PUCK_SIZE)),
@@ -58,9 +61,6 @@ def player_sprite(**config):
         boundaries=pygame.Rect(0, 0, WIDTH, HEIGHT),
     )
 
-# @controller.npc_controller(PUCK)
-@sprites.sprite(PUCK)
-@game.config()
 def puck_sprite(**config):
     return sprites.PhysicsSprite(
         image=pygame.Surface((PUCK_SIZE, PUCK_SIZE)),
@@ -70,7 +70,6 @@ def puck_sprite(**config):
     )
 
 
-@screen.screen_settings(SCENE)
 def get_screen_settings():
     return screen.ScreenSettings(
         width=WIDTH,
@@ -79,8 +78,6 @@ def get_screen_settings():
     )
 
 
-@game.screen_handler
-@screen.screen_update(SCENE)
 def screen_update(data, settings: screen.ScreenSettings, **config):
     player_settings = config[PLAYER]
     player_data = data[PLAYER]
@@ -116,21 +113,15 @@ def screen_update(data, settings: screen.ScreenSettings, **config):
     return clock.get_delta_time()
 
 
-@game.scene(SCENE)
-@sprites.inject_sprites
 def update(dt, sprites, **config):
     # Physics and controller stuff happens here
-    data_packet = {
+    sprites[PLAYER].update(dt, **config)
+
+    return {
         PLAYER: {"position": sprites[PLAYER].position},
         PUCK: {"position": sprites[PUCK].position},
     }
 
-    sprites[PLAYER].position += sprites[PLAYER].controller(dt, **config)
 
-    return data_packet
-
-
-# initializes pygame
-@game.run(SCENE)
 def event_handler(data, event, **config):
     return True
