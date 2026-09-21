@@ -14,7 +14,9 @@ classifiers = [
 ]
 dependencies = [
     "pygame==2.6.1",
-    "numpy==2.5.0"
+    "numpy==2.5.0",
+    "Cython==3.2.6",
+    "fuzzywuzzy==0.18.0",
 ]
 
 [project.urls]

@@ -1,7 +1,8 @@
-from numpy.random import normal, rand, choice
+from typing import Any
+
+from numpy.random import normal
+from game_utils.math.vector_utils import get_random_vector
 from pygame import Vector3
-
-
 
 class PhysicsBody:
     """Applies physics to a GameSprite"""
@@ -173,19 +174,19 @@ class PhysicsBody:
 
     def __str__(self) -> str:
         return str(self.__position)
-    
-    @staticmethod
-    def get_random_vector(scalar_mag: float = 1.0, non_negative: bool = False) -> Vector3:
-        def rand_sign() -> int:
-            return choice([-1, 1]) if not non_negative else 1
 
-        return Vector3(
-            x=rand() * rand_sign() * scalar_mag,
-            y=rand() * rand_sign() * scalar_mag,
-            z=rand() * rand_sign() * scalar_mag
-        )
+
+
+__REGISTERED_CONFIGS: dict[str, Any] = {}
+
+def register_physics_body_config(id: str):
+    def __wrapper(fn):
+        config = fn()
+        __REGISTERED_CONFIGS[id] = config
+
+    return __wrapper
     
-def inject_physics_body(sprite, mass: float, friction: float = 0.0, elasticity: float = 0.0, slip: float | None = None):
+def add_body_to_sprite(sprite, mass: float, friction: float = 0.0, elasticity: float = 0.0, slip: float | None = None):
     """Injects a physics body into a sprite object.  This will create a new PhysicsBody
     object and assign it to the sprite's physics_body attribute.
 
@@ -196,9 +197,6 @@ def inject_physics_body(sprite, mass: float, friction: float = 0.0, elasticity: 
         elasticity (float, optional): The elasticity coefficient. Defaults to 0.0.
         slip (float | None, optional): The slip coefficient. Defaults to None.
     """
-    if not hasattr(sprite, "physics_body"):
-        raise AttributeError("Sprite does not have a physics_body attribute")
-
     sprite.physics_body = PhysicsBody(
         mass=mass,
         position=sprite.get_position(),
@@ -206,3 +204,25 @@ def inject_physics_body(sprite, mass: float, friction: float = 0.0, elasticity: 
         elasticity=elasticity,
         slip=slip
     )
+
+def inject_physics_body(id: str):
+    """annotate a method that returns a sprite, and this will inject the sprite with a given
+    physics body configuration
+
+    Args:
+        fn (function): the method to annotate
+    """
+    def __wrapper(fn):
+        sprite_ = fn()
+        config = __REGISTERED_CONFIGS.get(id, {})
+        
+        add_body_to_sprite(
+            sprite=sprite_, 
+            mass=config.get("mass", 0.0),
+            position=config.get("position", 0.0),
+            friction=config.get("friction", 0.0),
+            elasticity=config.get("elasticity", 0.0),
+            slip=config.get("slip")
+        )
+    return __wrapper
+        
