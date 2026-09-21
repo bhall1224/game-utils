@@ -1,15 +1,32 @@
 from pygame import Rect, Surface
 
 
-class SpriteSheet:
+class __SpriteSheet:
     """Allows user to access segements of a sprite sheet"""
 
-    def __init__(self, spritesheet: Surface, bg_color: str | None = None) -> None:
-        self.spritesheet = spritesheet
-        self.rect = self.spritesheet.get_rect()
-        self.bg_color = bg_color
+    def __init__(
+        self,
+        spritesheet: Surface,
+        n_sprites: int = 1,
+        n_lists: int = 1,
+        bg_color: str | None = None,
+    ) -> None:
+        self.__spritesheet = spritesheet
+        self.__bg_color = bg_color
+        self.__n_lists = n_lists
+        self.__n_sprites = n_sprites
+        self.__sprite_size = Rect((0, 0), (self.rect.height, self.rect.width / n_sprites))
+        self.__sprite_rects = [
+            # add a new rectangle for n sprites in this sheet (by m lists)
+            Rect(
+                (self.__sprite_size.x + i * self.__sprite_size.w, self.__sprite_size.y),
+                self.__sprite_size.size,
+            )
+            for i in range(self.__n_sprites)
+            for _ in range(self.__n_lists)
+        ]
 
-    def get_spritesheet_segment(self, rect: Rect) -> Surface:
+    def _get_spritesheet_segment(self, rect: Rect) -> Surface:
         """Get a segment of the spritesheet using the given coordinates
 
         Args:
@@ -19,52 +36,29 @@ class SpriteSheet:
             Surface: The sprite from the spritesheet using the given coordinates
         """
         image = Surface(rect.size)
-        if self.bg_color is not None:
-            image.fill(self.bg_color)
-        image.blit(self.spritesheet, (0, 0), rect)
+        if self.__bg_color is not None:
+            image.fill(self.__bg_color)
+        image.blit(self.__spritesheet, (0, 0), rect)
         return image
-
-
-class SpriteSheetDataStruct(SpriteSheet):
-    """Base Sprite Sheet structure for sprite sheet data structures"""
-
-    def __init__(
-        self,
-        spritesheet: Surface,
-        n_sprites: int = 1,
-        n_lists: int = 1,
-        bg_color: str | None = None,
-    ) -> None:
-        super().__init__(spritesheet, bg_color)
-        self.n_lists = n_lists
-        self.n_sprites = n_sprites
-        self.sprite_size = Rect((0, 0), (self.rect.height, self.rect.width / n_sprites))
-        self.sprite_rects = self._get_sprite_rects()
-
+    
     def _get_sprite_rects(self) -> list[Rect]:
-        return [
-            # add a new rectangle for n sprites in this sheet (by m lists)
-            Rect(
-                (self.sprite_size.x + i * self.sprite_size.w, self.sprite_size.y),
-                self.sprite_size.size,
-            )
-            for i in range(self.n_sprites)
-            for _ in range(self.n_lists)
-        ]
+        return self.__sprite_rects
 
 
-class SpriteSheetList(SpriteSheetDataStruct):
+class SpriteSheetList(__SpriteSheet):
     """implements sprite sheet as a list of sprites.  sprites are indexed"""
+    def __init__(self, spritesheet, n_sprites = 1, n_lists = 1, bg_color = None):
+        super().__init__(spritesheet, n_sprites, n_lists, bg_color)
 
     def __getitem__(self, index: int) -> Surface:
-        if index >= len(self.sprite_rects):
+        if index >= len(self._get_sprite_rects()):
             msg = f"index {index} out of bounds"
             raise IndexError(msg)
 
-        return self.get_spritesheet_segment(self.sprite_rects[index])
+        return self._get_spritesheet_segment(self._get_sprite_rects()[index])
 
 
-class SpriteSheetMap(SpriteSheetDataStruct):
+class SpriteSheetMap(__SpriteSheet):
     """Implements a sprite sheet as a dictionary of sprites"""
 
     def __init__(
@@ -76,25 +70,25 @@ class SpriteSheetMap(SpriteSheetDataStruct):
         bg_color: str | None = None,
     ) -> None:
         super().__init__(spritesheet, n_sprites, n_lists, bg_color)
-        if len(keys) < len(self.sprite_rects):
+        if len(keys) < len(self._get_sprite_rects()):
             raise Exception("Not enough keys for sprites determined")
 
-        self.keys = keys
-        self.sprite_map = {
-            self.keys[i]: self.sprite_rects[i] for i in range(len(self.keys))
+        self.__keys = keys
+        self.__sprite_map = {
+            self.__keys[i]: self._get_sprite_rects()[i] for i in range(len(self.__keys))
         }
 
     def get(self, name) -> Surface | None:
-        s = self.sprite_map.get(name)
+        s = self.__sprite_map.get(name)
 
         if s is not None:
-            return self.get_spritesheet_segment(s)
+            return self._get_spritesheet_segment(s)
 
     def __getitem__(self, name: str) -> Surface | None:
-        s = self.sprite_map.get(name)
+        s = self.__sprite_map.get(name)
 
         if s is None:
             msg = f"No key {name}"
             raise KeyError(msg)
 
-        return self.get_spritesheet_segment(s)
+        return self._get_spritesheet_segment(s)

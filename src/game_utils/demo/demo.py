@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from game_utils import game, clock, screen, sprites
+from game_utils import game, clock, screen, sprites, controller, physics
 import pygame
 
 WIDTH = 1280
@@ -12,18 +12,7 @@ PLAYER = "striker"
 PUCK = "puck"
 
 
-def controller():
-    l, r, u, d, q, e = (
-        pygame.key.get_pressed()[k] for k in [pygame.K_a, pygame.K_d, pygame.K_w, pygame.K_s, pygame.K_q, pygame.K_ESCAPE]
-    )
-
-    if e or q:
-        pygame.event.post(pygame.event.Event(pygame.QUIT))
-
-    return pygame.Vector2((r - l), (d - u))
-
-
-@game.config()
+@game.register_config()
 def config():
     return {
         PLAYER: {
@@ -40,21 +29,38 @@ def config():
         "table": {"color": "firebrick"},
     }
 
+def player_controller(dt, **config):
+    l, r, u, d, q, e = (
+        pygame.key.get_pressed()[k]
+        for k in [
+            pygame.K_a,
+            pygame.K_d,
+            pygame.K_w,
+            pygame.K_s,
+            pygame.K_q,
+            pygame.K_ESCAPE,
+        ]
+    )
+
+    if e or q:
+        pygame.event.post(pygame.event.Event(pygame.QUIT))
+
+    return pygame.Vector2((r - l), (d - u)) * dt * config["controller"]["speed"]
 
 @sprites.player_sprite(PLAYER)
-@game.inject_config()
+@game.config()
 def player_sprite(**config):
     return sprites.PlayerSprite(
         image=pygame.Surface((PUCK_SIZE, PUCK_SIZE)),
         position=pygame.Vector2(WIDTH / 4, HEIGHT / 2),
-        controller=controller,
+        controller=player_controller,
         physics_body=config[PLAYER]["physics_body"],
         boundaries=pygame.Rect(0, 0, WIDTH, HEIGHT),
     )
 
-
+# @controller.npc_controller(PUCK)
 @sprites.sprite(PUCK)
-@game.inject_config()
+@game.config()
 def puck_sprite(**config):
     return sprites.PhysicsSprite(
         image=pygame.Surface((PUCK_SIZE, PUCK_SIZE)),
@@ -86,14 +92,14 @@ def screen_update(data, settings: screen.ScreenSettings, **config):
 
     # DRAW THE TABLE
     pygame.draw.rect(
-        surface=settings.screen_surface,
+        surface=settings.__screen_surface,
         color=table_settings["color"],
         rect=(0, 0, settings.width, settings.height),
         border_radius=15,
     )
     # DRAW PLAYER
     pygame.draw.circle(
-        surface=settings.screen_surface,
+        surface=settings.__screen_surface,
         color=player_settings["color"],
         center=player_data["position"],
         radius=player_settings["radius"],
@@ -101,7 +107,7 @@ def screen_update(data, settings: screen.ScreenSettings, **config):
 
     # DRAW PUCK
     pygame.draw.circle(
-        surface=settings.screen_surface,
+        surface=settings.__screen_surface,
         color=ball_settings["color"],
         center=ball_data["position"],
         radius=ball_settings["radius"],
@@ -119,11 +125,10 @@ def update(dt, sprites, **config):
         PUCK: {"position": sprites[PUCK].position},
     }
 
-    sprites[PLAYER].position += (
-        sprites[PLAYER].controller() * dt * config["controller"]["speed"]
-    )
+    sprites[PLAYER].position += sprites[PLAYER].controller(dt, **config)
 
     return data_packet
+
 
 # initializes pygame
 @game.run(SCENE)
