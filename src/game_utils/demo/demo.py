@@ -52,6 +52,8 @@ def player_controller(dt, **config):
 
     return pygame.Vector2((r - l), (d - u)) * dt * config["controller"]["speed"]
 
+@game.sprite(PLAYER)
+@game.inject_config()
 def player_sprite(**config):
     return sprites.PlayerSprite(
         image=pygame.Surface((PUCK_SIZE, PUCK_SIZE)),
@@ -61,6 +63,9 @@ def player_sprite(**config):
         boundaries=pygame.Rect(0, 0, WIDTH, HEIGHT),
     )
 
+
+@game.sprite(PUCK)
+@game.inject_config()
 def puck_sprite(**config):
     return sprites.PhysicsSprite(
         image=pygame.Surface((PUCK_SIZE, PUCK_SIZE)),
@@ -69,7 +74,7 @@ def puck_sprite(**config):
         boundaries=pygame.Rect(0, 0, WIDTH, HEIGHT),
     )
 
-
+@game.screen_settings()
 def get_screen_settings():
     return screen.ScreenSettings(
         width=WIDTH,
@@ -77,7 +82,7 @@ def get_screen_settings():
         title="Bouncy Ball",
     )
 
-
+@game.screen_settings(SCENE)
 def screen_update(data, settings: screen.ScreenSettings, **config):
     player_settings = config[PLAYER]
     player_data = data[PLAYER]
@@ -112,8 +117,9 @@ def screen_update(data, settings: screen.ScreenSettings, **config):
 
     return clock.get_delta_time()
 
-
-def update(dt, sprites, **config):
+@game.inject_sprites()
+@game.inject_config()
+def update(sprites, dt, **config):
     # Physics and controller stuff happens here
     sprites[PLAYER].update(dt, **config)
 
@@ -122,6 +128,7 @@ def update(dt, sprites, **config):
         PUCK: {"position": sprites[PUCK].position},
     }
 
-
-def event_handler(data, event, **config):
+@game.run(SCENE)
+def run(data, event, **config):
+    print(data)
     return True

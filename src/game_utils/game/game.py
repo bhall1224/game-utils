@@ -4,8 +4,10 @@ import pygame
 import json
 
 
-from game_utils import sprites 
+from game_utils import sprites
 from game_utils.clock import get_delta_time
+from game_utils.controller.controller import Controller
+from game_utils.screen.screen import ScreenSettings
 from game_utils.sprites.sprites import GameSprite
 
 # module relies heavily on pygame
@@ -20,21 +22,23 @@ NEXT_SCENE_EVENT = pygame.USEREVENT
 
 # Constant defaults for screen refresh
 FRAMERATE = 60.0
-UNITS = 1000.0 # pygame clock returns ms - take s as default
+UNITS = 1000.0  # pygame clock returns ms - take s as default
+
 
 class ScreenRefresh:
     framerate = FRAMERATE
     units = UNITS
 
+
 class Scene:
     def __init__(
-            self, 
-            screen, 
-            player: sprites.GameSprite,
-            other_sprites: list[sprites.GameSprite] = [],
-            config: dict[str, Any] = {},
-            screen_refresh = ScreenRefresh(),
-        ):
+        self,
+        screen,
+        player: sprites.GameSprite,
+        other_sprites: list[sprites.GameSprite] = [],
+        config: dict[str, Any] = {},
+        screen_refresh=ScreenRefresh(),
+    ):
         self.__screen = screen
         self.__player = player
         self.__other_sprites = other_sprites.copy()
@@ -56,34 +60,42 @@ class Scene:
 
     def config(self):
         return self.__config
-    
+
     def get_delta_time(self):
-        return get_delta_time(self.__screen_refresh.framerate, self.__screen_refresh.units)
-    
+        return get_delta_time(
+            self.__screen_refresh.framerate, self.__screen_refresh.units
+        )
+
+
 class Game:
     def __init__(self):
-        self.__config = {}
-        self.__scene_mapping = {}
-        self.__sprite_mapping = {}
+        self.__config: dict[str, Any] = {}
+        self.__scene_mapping: dict[str, Scene] = {}
+        self.__sprite_mapping: dict[str, GameSprite] = {}
+        self.__screen_settings: dict[str, ScreenSettings] = {}
+        self.__controllers: dict[str, Controller]
+        self.__current_scene: int = -1
 
-    def run(self):
-        def __wrapper(event_handler_fn):
+    def run(self, start_scene: str | None = None):
+        def __wrapper(run_fn):
             running = True
-
+            scene = self.__get_next_scene(start_scene)
             while running:
-                scene = self.__scenes_as_list()[0]
-
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         running = False
                     elif event.type == NEXT_SCENE_EVENT:
-                        if event.dict is not None:
-                            self.__scene_mapping.update(event.dict)
-                        self.__scene_mapping.pop(scene.__name__)
+                        next_scene_name = (
+                            event.dict.get("scene_name")
+                            if event.dict is not None
+                            else None
+                        )
+                        scene = self.__get_next_scene(next_scene_name)
                     else:
-                        running = event_handler_fn(event, scene, **self.__config)
+                        running = run_fn(scene, event, **self.__config)
 
-            return event_handler_fn
+            return run_fn
+
         return __wrapper
 
     def scene(self, name):
@@ -96,12 +108,12 @@ class Game:
             name (str, optional): Pass an optional name for the scene, which will be added as a tag.
         Defaults to None.
         """
+
         def __inner(scene_fn):
             # inner method simply registers the function in the map
             self.__scene_mapping[name] = scene_fn()
 
         return __inner
-
 
     def config(
         self,
@@ -153,31 +165,88 @@ class Game:
                 return config
 
             return __wrapper
+
         return __inner
 
-    def inject_config(self, key=None):
+    def inject_config(self, key: str | None = None):
         def __inner(fn):
-            def __wrapper(*args, **_):
-                registered_config = self.__config.get(key, self.__config) if key else self.__config
+            def __wrapper(*args, **more_config):
+                registered_config = (
+                    self.__config.get(key, self.__config) if key else self.__config
+                )
+                registered_config.update(more_config)
                 return fn(*args, **registered_config)
+
             return __wrapper
+
         return __inner
 
-    def sprite(self, name):
+    def sprite(self, name: str | None = None):
         def __inner(sprite_fn):
             def __wrapper(**config):
                 sprite: GameSprite = sprite_fn(**config)
                 self.__sprite_mapping[name] = sprite
                 return sprite
+
             return __wrapper
+
         return __inner
 
-    def inject_sprite(self, name):
+    def inject_sprites(self):
         def __inner(fn):
-            def __wrapper(sprite, *args, **config):
-                sprite = self.__sprite_mapping[name]
-                return fn(sprite, *args, **config)
+            def __wrapper(*args, **config):
+
+                return fn(list(self.__sprite_mapping.values()), *args, **config)
+
             return __wrapper
+
         return __inner
 
+    def screen_settings(self, name: str | None = None):
+        def __inner(fn):
+            self.__screen_settings[name or fn.__name__] = fn()
+            return fn
+
+        return __inner
+
+    def inject_screen_settings(self, key: str | None = None):
+        def __inner(fn):
+            def __wrapper(*args, **config):
+                settings = (
+                    self.__screen_settings.get(key, ScreenSettings())
+                    if key
+                    else ScreenSettings
+                )
+                return fn(settings, *args, **config)
+
+            return __wrapper
+
+        return __inner
+
+    def controller(self, name: str | None = None):
+        def __inner(fn):
+            self.__controllers[name or fn.__name__] = fn()
+            return fn
+
+        return __inner
+
+    def inject_controller(self, key: str | None = None):
+            def __inner(fn):
+                def __wrapper(*args, **config):
+                    controller = (
+                        self.__controllers.get(key, Controller())
+                        if key
+                        else Controller
+                    )
+                    return fn(controller, *args, **config)
     
+                return __wrapper
+    
+            return __inner
+
+    def __get_next_scene(self, scene_name: str | None = None):
+        if scene_name is None:
+            self.__current_scene += 1
+            return list(self.__scene_mapping.values())[self.__current_scene]
+        else:
+            return self.__scene_mapping[scene_name]

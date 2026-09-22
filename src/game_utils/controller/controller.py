@@ -35,7 +35,7 @@ class ControllerActions:
 class Controller:
     def __init__(
         self,
-        actions: ControllerActions
+        actions: ControllerActions = ControllerActions()
     ):
         self.__buttons = actions.buttons
         self.__axes = actions.axes
