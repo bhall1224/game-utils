@@ -7,17 +7,22 @@ from game_utils import clock
 
 import pygame
 
+
+# Constant defaults for screen refresh
+FRAMERATE = 60.0
+UNITS = 1000.0  # pygame clock returns ms - take s as default
+
 WIDTH = 1280
 HEIGHT = 720
 PUCK_SIZE = 40
 SCENE = "bouncy-ball"
 
-PLAYER = "striker"
+PLAYER = "player"
 PUCK = "puck"
 
-game = Game()
+bouncyball = Game()
 
-@game.config()
+@bouncyball.config()
 def config():
     return {
         PLAYER: {
@@ -34,7 +39,8 @@ def config():
         "table": {"color": "firebrick"},
     }
 
-def player_controller(dt, **config):
+@bouncyball.inject_config
+def player_controller(**config):
     l, r, u, d, q, e = (
         pygame.key.get_pressed()[k]
         for k in [
@@ -50,10 +56,9 @@ def player_controller(dt, **config):
     if e or q:
         pygame.event.post(pygame.event.Event(pygame.QUIT))
 
-    return pygame.Vector2((r - l), (d - u)) * dt * config["controller"]["speed"]
+    return pygame.Vector2((r - l), (d - u)) * config["controller"]["speed"] * clock.get_delta_time(framerate=FRAMERATE, units=UNITS)
 
-@game.sprite(PLAYER)
-@game.inject_config()
+@bouncyball.inject_config
 def player_sprite(**config):
     return sprites.PlayerSprite(
         image=pygame.Surface((PUCK_SIZE, PUCK_SIZE)),
@@ -64,8 +69,7 @@ def player_sprite(**config):
     )
 
 
-@game.sprite(PUCK)
-@game.inject_config()
+@bouncyball.inject_config
 def puck_sprite(**config):
     return sprites.PhysicsSprite(
         image=pygame.Surface((PUCK_SIZE, PUCK_SIZE)),
@@ -74,15 +78,16 @@ def puck_sprite(**config):
         boundaries=pygame.Rect(0, 0, WIDTH, HEIGHT),
     )
 
-@game.screen_settings()
+@bouncyball.screen_settings
 def get_screen_settings():
     return screen.ScreenSettings(
-        width=WIDTH,
-        height=HEIGHT,
+        dimensions=pygame.Vector2(WIDTH, HEIGHT),
         title="Bouncy Ball",
     )
 
-@game.screen_settings(SCENE)
+
+@bouncyball.inject_screen_settings
+@bouncyball.inject_config
 def screen_update(data, settings: screen.ScreenSettings, **config):
     player_settings = config[PLAYER]
     player_data = data[PLAYER]
@@ -115,20 +120,11 @@ def screen_update(data, settings: screen.ScreenSettings, **config):
         radius=ball_settings["radius"],
     )
 
-    return clock.get_delta_time()
 
-@game.inject_sprites()
-@game.inject_config()
-def update(sprites, dt, **config):
-    # Physics and controller stuff happens here
-    sprites[PLAYER].update(dt, **config)
-
-    return {
-        PLAYER: {"position": sprites[PLAYER].position},
-        PUCK: {"position": sprites[PUCK].position},
-    }
-
-@game.run(SCENE)
-def run(data, event, **config):
-    print(data)
+@bouncyball.run
+@bouncyball.inject_config
+def run(event, **config):
+    print(event)
+    print(config)
+    # LOGIC GOES HERE
     return True

@@ -1,102 +1,75 @@
+from collections.abc import Callable
 
-from pygame import Surface, Vector3
+from pygame import Surface, Vector2
 from pygame.sprite import Sprite
 
+from game_utils.controller.controller import Controller
+from game_utils.physics.physics import PhysicsBody
 
-__SPRITES = {}
+CallbackType = Callable[[float, Vector2], None]
+
 
 class GameSprite(Sprite):
-    CONTROLLER_INPUT = "controller"
-    DELTA_TIME = "dt"
+    """A class for game sprite behaviors"""
 
-    """_summary_
-
-    Args:
-        id (int): unique id for the sprite.  can be ordinal
-        image (pygame.Surface): Surface on which to draw the sprite
-        position (pygame.Vector3): Position on screen to draw the sprite
-        boundaries (pygame.Rect | None): Optional boundaries in which to keep the sprite.  Defaults to None
-    """
     def __init__(
         self,
         image: Surface,
-        position: Vector3,
-        controller=None,
-        boundaries=None,
-        physics_body=None
+        position: Vector2,
+        controller: Controller = None,
+        physics_body: PhysicsBody = None,
+        boundaries: Vector2 = None,
     ):
-        """Implement a Game Sprite object. Subclass must implement GameSprite.update
+        """Create a new instance of GameSprite
 
         Args:
             image (Surface): The image for the sprite
-            position (Vector3): Where to put the sprite
+            position (Vector2): Where to put the sprite
             controller (Controller | None, optional): The controller for the sprite
             boundaries (Rect | None, optional): Optional boundary coordinates
             physics_body (PhysicsBody | None, optional): The physics body for the sprite
         """
         super().__init__()
-        self.__image = image
-        self.__position = position
-        self.controller = controller
-        self.boundaries = boundaries
-        self.physics_body = physics_body
+        self._image = image
+        self._position = position
+        self._controller = controller
+        self._boundaries = boundaries
+        self._physics_body = physics_body
+        self._update_callbacks = []
 
-    def update(self, position: Vector3):
-        """update this sprite with given information
+    def update(self, *args, **kwargs):
+        """update the sprite's position
+
+        Args:
+            dt (float): the change in time.  Defaults to None
+            position (Vector2): a new position for this sprite. Defaults to None
+            **config: the given configurations for this game
         """
-        self.__position = position
+        dt: float = 1.0  # make no change if not given
+        position: Vector2 = Vector2(0.0, 0.0)  # make no change if not given
+        config = {}
+        if len(args) > 0:
+            dt = args[0]
+            position = args[1] if len(args) > 1 else position
+        elif len(kwargs) > 0:
+            dt = kwargs.pop("dt")
+            position = kwargs.pop("position", position)
+            config = kwargs
+
+        self._position += position * dt
+
+        for callback in self._update_callbacks:
+            callback(dt, position**config)
 
     def get_rect(self):
         return self.__image.get_rect()
-    
+
     def get_image(self):
         return self.__image
-    
+
     def get_position(self):
         return self.__position
 
-
-def sprite(name=None):
-    """Annotate a function that returns a GameSprite.  
-    If a name is provided, use that as the key; otherwise, the function's name is used.
-
-    Args:
-        name (str, optional): A unique name for the sprite. Defaults to None.
-    """
-    def __inner(fn):
-        # Store the sprite in the global __SPRITES dictionary
-        __SPRITES[
-            name or fn.__name__
-        ] = fn()
-        return fn
-    return __inner
-
-def sprite_group(name=None):
-    def __inner(fn):
-        new_sprites = fn()
-        # __SPRITE_GROUPS[name or fn.__name__] = Group(*new_sprites.values())
-        __SPRITES.update(new_sprites)
-        return fn
-    return __inner
-
-def player_sprite(name=None):
-    def __inner(fn):
-        return sprite(name)(fn)
-    return __inner
-
-def inject_sprites(fn):
-    def __inner(dt, **config):
-        return fn(dt, __SPRITES, **config)
-    return __inner
-
-def sprite_boundaries(name=None):
-    def __inner(fn):
-        if name is not None:
-            sprite_ = __SPRITES.get(name)
-            if sprite_ is not None and sprite_.boundaries is not None:
-                sprite_.position = fn(sprite_)
-            else:
-                for sprite_ in __SPRITES.values():
-                    sprite_.position = fn(sprite_)
-        return fn
-    return __inner
+    def update_callback(self, name=None):
+        def __inner(fn):
+            self.__update_callbacks.append(fn)

@@ -38,7 +38,7 @@ def test_game_sprite_initializes_rect_position_and_boundaries(test_surface):
 
     assert sprite.image is test_surface
     assert sprite.position == position
-    assert sprite.boundaries == boundaries
+    assert sprite.__boundaries == boundaries
     assert sprite.rect.topleft == (12, 18)
     assert sprite.rect.size == (16, 16)
 
