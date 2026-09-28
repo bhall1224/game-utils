@@ -28,7 +28,7 @@ class ControllerActions:
 
 
 #####################################################################################
-# Classes for controller behavior and configuration
+# Class for controller behavior and configuration
 #####################################################################################
 
 
@@ -51,87 +51,31 @@ class Controller:
         return self.__hats[index]()
 
 
-
 #####################################################################################
-# functions for injecting controllers into sprites
-#####################################################################################
-
-
-def add_controller_to_sprite(sprite, actions: ControllerActions):
-    """Injects a controller into a sprite object.  This will create a new Controller
-    object and assign it to the sprite's controller attribute.
-
-    Args:
-        sprite (GameSprite): The sprite to inject the controller into
-        buttons (list[ButtonAction]): The list of button actions
-        axes (list[AxisAction]): The list of axis actions
-        hats (list[HatAction]): The list of hat actions
-    """
-    sprite.controller = Controller(
-        buttons=actions.buttons, axes=actions.axes, hats=actions.hats
-    )
-
-
-#####################################################################################
-# Annotation methods for direct injection
-#####################################################################################
-__REGISTERED_CONTROLLER_ACTIONS: dict[str, ControllerActions] = {}
-
-
-def button_action(id: str, action_name: str):
-    def __inner(fn):
-        __REGISTERED_CONTROLLER_ACTIONS.get(id, ControllerActions()).buttons[
-            action_name
-        ] = fn
-        return fn()
-
-    return __inner
-
-
-def axis_action(id: str, action_name: str):
-    def __inner(fn):
-        __REGISTERED_CONTROLLER_ACTIONS.get(id, ControllerActions()).axes[
-            action_name
-        ] = fn
-        return fn()
-
-    return __inner
-
-
-def hat_action(id: str, action_name: str):
-    def __inner(fn):
-        __REGISTERED_CONTROLLER_ACTIONS.get(id, ControllerActions()).hats[
-            action_name
-        ] = fn
-        return fn()
-
-    return __inner
-
-
-def inject_controller(id: str):
-    """annotate a method that returns a sprite, and this will inject the sprite with a given
-    physics body configuration
-
-    Args:
-        fn (function): the method to annotate
-    """
-
-    def __wrapper(fn):
-        sprite_ = fn()
-        add_controller_to_sprite(
-            sprite=sprite_,
-            actions=__REGISTERED_CONTROLLER_ACTIONS.get(id, ControllerActions()),
-        )
-        return fn()
-
-    return __wrapper
-
-
-#####################################################################################
-# Summoning all joysticks and realtime joystick handling
+# Class for assigning and registering controllers
 #####################################################################################
 
+class Controllers:
+    def __init__(self):
+        self.__controllers = {}
 
-def assign_joysticks():
-    for i in range(joystick.get_count()):
-        new_joystick = joystick.Joystick(i)
+    def add(self, name):
+        def __inner(fn):
+            self.__controllers[name] = fn()
+            return fn
+        return __inner
+
+    def controller(self, joy_id):
+        def __inner(fn):
+            def __sprite_fn_wrapper(config):
+                return fn(self.__controllers[joy_id], config)
+            return __sprite_fn_wrapper
+        return __inner
+
+    def controllers(self):
+        def __inner(fn):
+            def __sprite_fn_wrapper(config):
+                return fn(self.__controllers, config)
+            return __sprite_fn_wrapper
+        return __inner
+

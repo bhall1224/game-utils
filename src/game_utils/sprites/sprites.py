@@ -3,11 +3,37 @@ from collections.abc import Callable
 from pygame import Surface, Vector2
 from pygame.sprite import Sprite
 
-from game_utils.controller.controller import Controller
 from game_utils.physics.physics import PhysicsBody
+
+#####################################################################################
+# Type aliases for callback function types
+#####################################################################################
 
 CallbackType = Callable[[float, Vector2], None]
 
+#####################################################################################
+# Class for registering and injecting sprites
+#####################################################################################
+
+class Sprites:
+    def __init__(self):
+        self.__sprites: dict[str, GameSprite] = {}
+
+    def add(self, name):
+        def __inner(fn):
+            self.__sprites[name] = fn()
+        return __inner
+
+    def sprites(self):
+        def __inner(fn):
+            def __event_wrapper(event, settings, config):
+                return fn(event, self.__sprites, settings, config)
+            return __event_wrapper
+        return __inner
+
+#####################################################################################
+# Class for Pygame Sprite behaviors
+#####################################################################################
 
 class GameSprite(Sprite):
     """A class for game sprite behaviors"""
@@ -16,9 +42,8 @@ class GameSprite(Sprite):
         self,
         image: Surface,
         position: Vector2,
-        controller: Controller = None,
         physics_body: PhysicsBody = None,
-        boundaries: Vector2 = None,
+        update_callbacks: list[Callable[[Vector2], Vector2]] = []
     ):
         """Create a new instance of GameSprite
 
@@ -30,36 +55,34 @@ class GameSprite(Sprite):
             physics_body (PhysicsBody | None, optional): The physics body for the sprite
         """
         super().__init__()
-        self._image = image
-        self._position = position
-        self._controller = controller
-        self._boundaries = boundaries
-        self._physics_body = physics_body
-        self._update_callbacks = []
+        self.__image = image
+        self.__position = position
+        self.__physics_body = physics_body
+        self.__update_callbacks = update_callbacks
 
     def update(self, *args, **kwargs):
-        """update the sprite's position
+        """update the sprite's position.  If a physics body is given, will automatically bind to its position
 
         Args:
-            dt (float): the change in time.  Defaults to None
             position (Vector2): a new position for this sprite. Defaults to None
-            **config: the given configurations for this game
+            config: the given configurations for this game
         """
-        dt: float = 1.0  # make no change if not given
-        position: Vector2 = Vector2(0.0, 0.0)  # make no change if not given
-        config = {}
+        # if given, bind to the physics body position
+        if self.__physics_body is not None:
+            self.__position = self.__physics_body.position
+
+        # make no change if not given
+        position: Vector2 = Vector2(0.0, 0.0)  
         if len(args) > 0:
-            dt = args[0]
-            position = args[1] if len(args) > 1 else position
+            position = args[0]
         elif len(kwargs) > 0:
-            dt = kwargs.pop("dt")
             position = kwargs.pop("position", position)
-            config = kwargs
 
-        self._position += position * dt
+        self.__position += position
 
-        for callback in self._update_callbacks:
-            callback(dt, position**config)
+        # Any other behaviors to bind to this sprite
+        for callback in self.__update_callbacks:
+            self.__position += callback(self.__position)
 
     def get_rect(self):
         return self.__image.get_rect()
@@ -69,7 +92,3 @@ class GameSprite(Sprite):
 
     def get_position(self):
         return self.__position
-
-    def update_callback(self, name=None):
-        def __inner(fn):
-            self.__update_callbacks.append(fn)

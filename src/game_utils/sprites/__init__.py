@@ -1,3 +1,4 @@
 from .sprites import (
-    GameSprite
+    GameSprite, 
+    Sprites
 )

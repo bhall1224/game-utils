@@ -1,32 +1,34 @@
-
 from pygame import display
 from pygame import FULLSCREEN, Color, Surface, Vector2
 
 ColorType = str | tuple[int, int, int] | Color
 
+
 class ScreenSettings:
-    def __init__ (
+    def __init__(
         self,
         dimensions: Vector2 | None = None,
         title: str | None = None,
         bg_color: ColorType | None = None,
         bg_image: Surface | None = None,
     ):
-        if dimensions is None:
-            self.__screen_surface = display.set_mode((0, 0), FULLSCREEN)
-            self.__dimensions = Vector2(
-                self.__screen_surface.get_width(),
-                self.__screen_surface.get_height()
-            )
-        else:
-            self.__dimensions = dimensions
-            self.__screen_surface = display.set_mode(self.__dimensions)
+        self.__dimensions = dimensions
+        self.__title = title
 
-        if title is not None:
-            display.set_caption(title)
-        
         self.__bg_color = bg_color
         self.__bg_image = bg_image
+
+    def activate(self):
+        if self.__dimensions is None:
+            self.__screen_surface = display.set_mode((0, 0), FULLSCREEN)
+            self.__dimensions = Vector2(
+                self.__screen_surface.get_width(), self.__screen_surface.get_height()
+            )
+        else:
+            self.__screen_surface = display.set_mode(self.__dimensions)
+
+        if self.__title is not None:
+            display.set_caption(self.__title)
 
     def update_screen(self):
         if self.__bg_color is not None:
@@ -40,6 +42,6 @@ class ScreenSettings:
 
     def get_dimensions(self):
         return self.__dimensions
-    
+
     def get_screen(self):
         return self.__screen_surface
