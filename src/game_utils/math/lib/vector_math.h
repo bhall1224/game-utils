@@ -1,3 +1,6 @@
+#ifndef VECTOR_MATH
+#define VECTOR_MATH
+
 typedef float vector[3];
 typedef vector *(*vector_transform)(vector *);
 
@@ -23,3 +26,5 @@ vector *from_arr(float arr[]);
 float *to_arr(vector *v);
 float magnitude(vector *v);
 unsigned short int compare_vectors(vector *va, vector *vb);
+
+#endif

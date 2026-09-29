@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from game_utils.game import Game
-from game_utils import sprites
+from game_utils.sprites import Sprites, GameSprite
 from game_utils import screen
 from game_utils import clock
 from game_utils import controller
@@ -23,12 +23,14 @@ PUCK = "puck"
 CONTROLLER_VECTOR = "acceleration"
 CONTROLLER_EVENT = pygame.USEREVENT
 
+ZERO_VECTOR = pygame.Vector2(0.0, 0.0)
+
 bouncyball = Game()
-bouncyball_sprites = sprites.Sprites()
+bouncyball_sprites = Sprites()
 bouncyball_controllers = controller.Controllers()
 
 
-@bouncyball.config()
+@bouncyball.config
 def config():
     return {
         PLAYER: {
@@ -46,9 +48,9 @@ def config():
         "title": "Bouncy Ball",
     }
 
-@bouncyball.inject_config
+
 def player_controller(config):
-    l, r, u, d, q, e = (
+    l, r, u, d, q, e, spc = (
         pygame.key.get_pressed()[k]
         for k in [
             pygame.K_a,
@@ -57,33 +59,28 @@ def player_controller(config):
             pygame.K_s,
             pygame.K_q,
             pygame.K_ESCAPE,
+            pygame.K_SPACE,
         ]
     )
 
-    if e or q:
-        pygame.event.post(pygame.event.Event(pygame.QUIT))
+    new_position = pygame.Vector2((r - l), (d - u)) * config["controller"]["speed"]
 
-    new_position = (
-        pygame.Vector2((r - l), (d - u))
-        * config["controller"]["speed"]
-        * clock.get_delta_time(framerate=FRAMERATE, units=UNITS)
-    )
 
-    pygame.event.post(pygame.event.Event(CONTROLLER_EVENT, {CONTROLLER_VECTOR: new_position}))
+    return spc, e or q, new_position
 
 
 @bouncyball_sprites.add(PLAYER)
 @bouncyball.inject_config
 def player_sprite(config):
     player_body = config[PLAYER]["physics_body"]
-    return sprites.GameSprite(
+    return GameSprite(
         image=pygame.Surface((PUCK_SIZE, PUCK_SIZE)),
         position=pygame.Vector2(WIDTH / 4, HEIGHT / 2),
         physics_body=PhysicsBody(
             mass=player_body["mass"],
             position=player_body["position"],
             friction=player_body["friction"],
-            elasticity=player_body["elasticity"]
+            elasticity=player_body["elasticity"],
         ),
     )
 
@@ -92,19 +89,19 @@ def player_sprite(config):
 @bouncyball.inject_config
 def puck_sprite(config):
     puck_body = config[PLAYER]["physics_body"]
-    return sprites.PhysicsSprite(
+    return GameSprite(
         image=pygame.Surface((PUCK_SIZE, PUCK_SIZE)),
         position=pygame.Vector2(WIDTH / 2, HEIGHT / 2),
         physics_body=PhysicsBody(
-                    mass=puck_body["mass"],
-                    position=puck_body["position"],
-                    friction=puck_body["friction"],
-                    elasticity=puck_body["elasticity"]
-                ),
+            mass=puck_body["mass"],
+            position=puck_body["position"],
+            friction=puck_body["friction"],
+            elasticity=puck_body["elasticity"],
+        ),
     )
 
 
-@bouncyball.screen_settings()
+@bouncyball.screen_settings
 @bouncyball.inject_config
 def screen_settings(config):
     return screen.ScreenSettings(
@@ -122,16 +119,18 @@ def screen_update(sprites, settings, config):
 
     table_settings = config["table"]
 
+    Sprites.update_all_sprites(sprites)
+
     # DRAW THE TABLE
     pygame.draw.rect(
-        surface=settings.__screen_surface,
+        surface=settings.screen(),
         color=table_settings["color"],
-        rect=(0, 0, settings.width, settings.height),
+        rect=(0, 0, settings.width(), settings.height()),
         border_radius=15,
     )
     # DRAW PLAYER
     pygame.draw.circle(
-        surface=settings.__screen_surface,
+        surface=settings.screen(),
         color=player_settings["color"],
         center=player_data.get_rect(),
         radius=player_settings["radius"],
@@ -139,24 +138,32 @@ def screen_update(sprites, settings, config):
 
     # DRAW PUCK
     pygame.draw.circle(
-        surface=settings.__screen_surface,
+        surface=settings.screen(),
         color=ball_settings["color"],
         center=ball_data.get_rect(),
         radius=ball_settings["radius"],
     )
+
+    settings.screen().update_screen()
 
 
 @bouncyball.event_handler
 @bouncyball_sprites.sprites
 def event_handler(event, sprites, settings, config):
     # LOGIC GOES HERE -- Called once per game loop
-    if event.type == CONTROLLER_EVENT:
-        new_vector = event.dict[CONTROLLER_VECTOR]
-        sprites[PLAYER].physics_body.apply_force(new_vector, clock.get_delta_time())
-
+    if event.type == pygame.KEYDOWN:
+        action, quit, new_vector = player_controller(config)
+        if action:
+            sprites[PLAYER].physics_body.apply_force(ZERO_VECTOR, clock.get_delta_time())
+        elif quit:
+            pygame.event.post(pygame.event.Event(pygame.QUIT))
+        else:
+            sprites[PLAYER].physics_body.apply_force(new_vector, clock.get_delta_time())
     screen_update(sprites, settings, config)
     return True
 
 
 if __name__ == "__main__":
     bouncyball.run()
+    print("game_over")
+    bouncyball.quit()

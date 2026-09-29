@@ -11,25 +11,6 @@ from game_utils.physics.physics import PhysicsBody
 
 CallbackType = Callable[[float, Vector2], None]
 
-#####################################################################################
-# Class for registering and injecting sprites
-#####################################################################################
-
-class Sprites:
-    def __init__(self):
-        self.__sprites: dict[str, GameSprite] = {}
-
-    def add(self, name):
-        def __inner(fn):
-            self.__sprites[name] = fn()
-        return __inner
-
-    def sprites(self):
-        def __inner(fn):
-            def __event_wrapper(event, settings, config):
-                return fn(event, self.__sprites, settings, config)
-            return __event_wrapper
-        return __inner
 
 #####################################################################################
 # Class for Pygame Sprite behaviors
@@ -92,3 +73,29 @@ class GameSprite(Sprite):
 
     def get_position(self):
         return self.__position
+
+
+
+
+#####################################################################################
+# Class for registering and injecting sprites
+#####################################################################################
+
+class Sprites:
+    def __init__(self):
+        self.__sprites: dict[str, GameSprite] = {}
+
+    def add(self, name):
+        def __inner(fn):
+            self.__sprites[name] = fn()
+        return __inner
+
+    def sprites(self, fn):
+        def __event_wrapper(event, settings, config):
+            return fn(event, settings, self.__sprites, config)
+        return __event_wrapper
+
+    @staticmethod
+    def update_all_sprites(sprites: dict[str, GameSprite]):
+        for sprite in sprites.values():
+            sprite.update()

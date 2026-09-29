@@ -17,6 +17,7 @@ class ScreenSettings:
 
         self.__bg_color = bg_color
         self.__bg_image = bg_image
+        self.__screen_surface = None
 
     def activate(self):
         if self.__dimensions is None:
@@ -40,8 +41,14 @@ class ScreenSettings:
     def draw_image(self, image):
         self.__screen_surface.blit(image, image.get_rect())
 
-    def get_dimensions(self):
+    def dimensions(self):
         return self.__dimensions
 
-    def get_screen(self):
+    def screen(self):
         return self.__screen_surface
+
+    def width(self):
+        return self.__dimensions.x
+
+    def height(self):
+        return self.__dimensions.y

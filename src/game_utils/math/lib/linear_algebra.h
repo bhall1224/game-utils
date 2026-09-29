@@ -1,3 +1,6 @@
+#ifndef LINEAR_ALGEBRA
+#define LINEAR_ALGEBRA
+
 typedef unsigned int vdimension;
 typedef float *vector;
 typedef void (*vector_transform)(vdimension*, vector);
@@ -18,3 +21,5 @@ void copy_and_release_vector(vdimension *v_size_ptr, vector v_to_set, vector v_c
 
 float magnitude(vdimension *v_size_ptr, vector vector);
 short int compare_vectors(vdimension *v_size_ptr, vector vctr_a, vector vctr_b);
+
+#endif

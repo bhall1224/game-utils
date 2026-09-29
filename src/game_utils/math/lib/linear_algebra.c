@@ -1,10 +1,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#ifndef linearalgebra
-#define linearalgebra
 #include "linear_algebra.h"
-#endif
 
 vector create_vector(vdimension *num_dimension_ptr)
 {

@@ -1,12 +1,6 @@
-#ifndef stdlib
-#define stdlib
 #include <stdlib.h>
-#endif
 
-#ifndef physicsbody
-#define physicsbody
 #include "physics_body.h"
-#endif
 
 struct Transform *create_transform(vector *position, vector *rotation, vector *velocity, vector *gravity)
 {
